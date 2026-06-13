@@ -10,9 +10,9 @@ import { apiSubmitPrediction } from '@/lib/api/client';
 import { formatMatchTime, getFlag, getFlagUrl, isPastKickoff } from '@/lib/utils';
 import type { Match } from '@/types';
 
-interface MatchCardProps { match: Match; index?: number; }
+interface MatchCardProps { match: Match; index?: number; x2Remaining: number; }
 
-export default function MatchCard({ match, index = 0 }: MatchCardProps) {
+export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardProps) {
   const qc = useQueryClient();
   
   const now = Date.now();
@@ -29,6 +29,9 @@ export default function MatchCard({ match, index = 0 }: MatchCardProps) {
   const [scoreB, setScoreB] = useState<string>(
     match.userPrediction ? String(match.userPrediction.predictedScoreB) : '',
   );
+  const [useDoublePoints, setUseDoublePoints] = useState<boolean>(
+    !!match.userPrediction?.useDoublePoints
+  );
   const [saving, setSaving] = useState(false);
 
   const { date, time } = formatMatchTime(match.matchTime);
@@ -42,16 +45,17 @@ export default function MatchCard({ match, index = 0 }: MatchCardProps) {
     }
     setSaving(true);
     try {
-      await apiSubmitPrediction(match.id, a, b);
+      await apiSubmitPrediction(match.id, a, b, useDoublePoints);
       await qc.invalidateQueries({ queryKey: ['matches'] });
       toast.success(
-        `⚽ Prediction saved: ${match.teamA} ${a}–${b} ${match.teamB}`,
+        `⚽ Prediction saved: ${match.teamA} ${a}–${b} ${match.teamB}${useDoublePoints ? ' (⚡ 2x)' : ''}`,
         { id: `pred-${match.id}` }
       );
-    } catch {
-      toast.error('Could not save prediction');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Could not save prediction';
+      toast.error(msg);
     } finally { setSaving(false); }
-  }, [scoreA, scoreB, match.id, match.teamA, match.teamB, qc]);
+  }, [scoreA, scoreB, useDoublePoints, match.id, match.teamA, match.teamB, qc]);
 
   return (
     <motion.div
@@ -155,8 +159,13 @@ export default function MatchCard({ match, index = 0 }: MatchCardProps) {
                 <div className="flex items-center gap-2">
                   <Lock size={12} className="text-zinc-500" />
                   <span className="text-sm text-zinc-400">Your pick:</span>
-                  <span className="font-bold text-white">
+                  <span className="font-bold text-white flex items-center gap-1.5">
                     {match.userPrediction.predictedScoreA}–{match.userPrediction.predictedScoreB}
+                    {match.userPrediction.useDoublePoints && (
+                      <span className="text-[9px] font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 flex items-center gap-0.5 shadow-gold-glow/5">
+                        ⚡ 2X
+                      </span>
+                    )}
                   </span>
                 </div>
                 {match.status === 'FINISHED' && (
@@ -199,6 +208,33 @@ export default function MatchCard({ match, index = 0 }: MatchCardProps) {
                   className="w-full bg-zinc-900 border border-white/10 rounded-xl py-3 text-center text-xl font-black text-white focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
+
+              {/* Double Points (x2) Toggle Checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer select-none py-1 group/toggle">
+                <input
+                  type="checkbox"
+                  checked={useDoublePoints}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    // If trying to turn ON, check limit
+                    if (checked && x2Remaining <= 0 && !match.userPrediction?.useDoublePoints) {
+                      toast.error('You have used all 5 Double Points (x2) tokens!');
+                      return;
+                    }
+                    setUseDoublePoints(checked);
+                  }}
+                  className="rounded border-white/10 bg-zinc-900 text-amber-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer accent-amber-500"
+                />
+                <span className="text-xs font-semibold text-zinc-300 group-hover/toggle:text-white transition-colors flex items-center gap-1.5">
+                  ⚡ Apply Double Points (2x)
+                  {useDoublePoints && (
+                    <span className="text-[9px] font-black text-amber-400 bg-amber-500/10 px-1 py-0.5 rounded border border-amber-500/20">
+                      ACTIVE
+                    </span>
+                  )}
+                </span>
+              </label>
+
               <button
                 id={`predict-btn-${match.id}`}
                 onClick={handleSave}

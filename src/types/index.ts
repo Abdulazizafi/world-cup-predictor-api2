@@ -32,6 +32,7 @@ export interface UserPrediction {
   predictedScoreA: number;
   predictedScoreB: number;
   pointsEarned: number;
+  useDoublePoints?: boolean;
   createdAt: string;
   updatedAt: string;
 }

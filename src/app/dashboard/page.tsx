@@ -32,6 +32,9 @@ function MatchesTab() {
   const stages = ['All', ...Array.from(new Set(matches.map((m: Match) => m.stage)))];
   const filtered = filter === 'All' ? matches : matches.filter((m: Match) => m.stage === filter);
 
+  // Count active x2 double points tokens
+  const x2Used = (matches as Match[]).filter((m: Match) => m.userPrediction?.useDoublePoints).length;
+
   // Sort matches: LIVE first, then PENDING (kickoff ascending), then FINISHED (kickoff descending)
   const sortedMatches = [...filtered].sort((a: Match, b: Match) => {
     const statusPriority = (status: string) => {
@@ -60,9 +63,14 @@ function MatchesTab() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black">⚽ Matches</h2>
-        <p className="text-xs text-zinc-500">Exact = 100pts · Outcome = 40pts</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-black">⚽ Matches</h2>
+          <span className="inline-flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full shadow-gold-glow/10">
+            ⚡ Double Points: {x2Used}/5 used
+          </span>
+        </div>
+        <p className="text-xs text-zinc-500">Exact = 100pts · Outcome = 40pts (Doubled with x2)</p>
       </div>
 
       {/* Stage filter dropdown */}
@@ -104,7 +112,7 @@ function MatchesTab() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {sortedMatches.map((match: Match, i: number) => (
-            <MatchCard key={match.id} match={match} index={i} />
+            <MatchCard key={match.id} match={match} index={i} x2Remaining={5 - x2Used} />
           ))}
         </div>
       )}
