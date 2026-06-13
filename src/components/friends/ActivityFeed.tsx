@@ -2,13 +2,11 @@
 // components/friends/ActivityFeed.tsx — Group activity feed
 import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
-import { timeAgo, getFlag, getInitial, isPastKickoff } from '@/lib/utils';
+import { timeAgo, getFlag, getFlagUrl, getInitial, isPastKickoff } from '@/lib/utils';
 import type { ActivityEntry } from '@/types';
 
 function ActivityItem({ entry, index }: { entry: ActivityEntry; index: number }) {
   const isRevealed = isPastKickoff(entry.matchTime);
-  const flagA = getFlag(entry.teamA);
-  const flagB = getFlag(entry.teamB);
 
   return (
     <motion.div
@@ -27,8 +25,16 @@ function ActivityItem({ entry, index }: { entry: ActivityEntry; index: number })
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="font-bold text-white text-sm">{entry.username}</span>
           <span className="text-zinc-400 text-sm">predicted</span>
-          <span className="font-semibold text-sm">
-            {flagA} {entry.teamA} vs {entry.teamB} {flagB}
+          <span className="inline-flex items-center gap-1 font-semibold text-sm">
+            <span className="w-5 h-3.5 relative rounded overflow-hidden border border-white/10 shrink-0 bg-zinc-900 inline-block align-middle">
+              <img src={getFlagUrl(entry.teamA)} alt={entry.teamA} className="w-full h-full object-cover" />
+            </span>
+            <span>{entry.teamA}</span>
+            <span className="text-zinc-500 font-normal mx-0.5">vs</span>
+            <span>{entry.teamB}</span>
+            <span className="w-5 h-3.5 relative rounded overflow-hidden border border-white/10 shrink-0 bg-zinc-900 inline-block align-middle">
+              <img src={getFlagUrl(entry.teamB)} alt={entry.teamB} className="w-full h-full object-cover" />
+            </span>
           </span>
         </div>
 

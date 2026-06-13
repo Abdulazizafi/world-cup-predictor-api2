@@ -43,4 +43,69 @@ export const getFlag = (teamName: string, apiFlag?: string | null): string => {
   return FLAGS[key] ?? '🏳️';
 };
 
+const FLAG_MAP: Record<string, string> = {
+  "algeria": "dz",
+  "argentina": "ar",
+  "australia": "au",
+  "austria": "at",
+  "belgium": "be",
+  "bosnia and herzegovina": "ba",
+  "brazil": "br",
+  "canada": "ca",
+  "cape verde": "cv",
+  "colombia": "co",
+  "croatia": "hr",
+  "curaçao": "cw",
+  "curacao": "cw",
+  "czech republic": "cz",
+  "democratic republic of the congo": "cd",
+  "dr congo": "cd",
+  "congo dr": "cd",
+  "ecuador": "ec",
+  "egypt": "eg",
+  "england": "gb-eng",
+  "france": "fr",
+  "germany": "de",
+  "ghana": "gh",
+  "haiti": "ht",
+  "iran": "ir",
+  "iraq": "iq",
+  "ivory coast": "ci",
+  "japan": "jp",
+  "jordan": "jo",
+  "mexico": "mx",
+  "morocco": "ma",
+  "netherlands": "nl",
+  "new zealand": "nz",
+  "norway": "no",
+  "panama": "pa",
+  "paraguay": "py",
+  "portugal": "pt",
+  "qatar": "qa",
+  "saudi arabia": "sa",
+  "scotland": "gb-sct",
+  "senegal": "sn",
+  "south africa": "za",
+  "south korea": "kr",
+  "spain": "es",
+  "sweden": "se",
+  "switzerland": "ch",
+  "tunisia": "tn",
+  "turkey": "tr",
+  "usa": "us",
+  "united states": "us",
+  "uruguay": "uy",
+  "uzbekistan": "uz"
+};
+
+export const getFlagUrl = (teamName: string): string => {
+  const norm = teamName.toLowerCase().trim();
+  const code = FLAG_MAP[norm];
+  if (code) {
+    return `https://flagcdn.com/w160/${code}.png`;
+  }
+  return `https://flagcdn.com/w160/un.png`;
+};
+
 export const getInitial = (name: string) => name[0]?.toUpperCase() ?? '?';
+

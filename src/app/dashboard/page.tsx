@@ -36,7 +36,7 @@ function MatchesTab() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">⚽ Matches</h2>
-        <p className="text-xs text-zinc-500">Exact = 5pts · Outcome = 3pts</p>
+        <p className="text-xs text-zinc-500">Exact = 100pts · Outcome = 40pts</p>
       </div>
 
       {/* Stage filter pills */}

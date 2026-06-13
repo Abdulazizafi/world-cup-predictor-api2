@@ -3,15 +3,13 @@
 import { motion } from 'framer-motion';
 import { Edit2 } from 'lucide-react';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { formatMatchTime, getFlag } from '@/lib/utils';
+import { formatMatchTime, getFlag, getFlagUrl } from '@/lib/utils';
 import type { Match } from '@/types';
 
 export default function PredictionCard({ match, index = 0 }: { match: Match; index?: number }) {
   const pred = match.userPrediction;
   if (!pred) return null;
   const { date, time } = formatMatchTime(match.matchTime);
-  const flagA = getFlag(match.teamA, match.teamAFlag);
-  const flagB = getFlag(match.teamB, match.teamBFlag);
 
   return (
     <motion.div
@@ -23,11 +21,15 @@ export default function PredictionCard({ match, index = 0 }: { match: Match; ind
       {/* Match info row */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-base">{flagA}</span>
+          <span className="w-6 h-4.5 relative rounded overflow-hidden border border-white/10 shrink-0 bg-zinc-900 inline-block align-middle">
+            <img src={getFlagUrl(match.teamA)} alt={match.teamA} className="w-full h-full object-cover" />
+          </span>
           <span className="text-sm font-bold">{match.teamA}</span>
           <span className="text-zinc-500 text-sm">vs</span>
           <span className="text-sm font-bold">{match.teamB}</span>
-          <span className="text-base">{flagB}</span>
+          <span className="w-6 h-4.5 relative rounded overflow-hidden border border-white/10 shrink-0 bg-zinc-900 inline-block align-middle">
+            <img src={getFlagUrl(match.teamB)} alt={match.teamB} className="w-full h-full object-cover" />
+          </span>
         </div>
         <StatusBadge status={match.status} />
       </div>
@@ -50,8 +52,8 @@ export default function PredictionCard({ match, index = 0 }: { match: Match; ind
         <div className="text-right">
           {match.status === 'FINISHED' && (
             <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl font-black text-lg ${
-              pred.pointsEarned === 5 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-gold-glow' :
-              pred.pointsEarned === 3 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+              pred.pointsEarned === 100 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-gold-glow' :
+              pred.pointsEarned === 40 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
               'bg-zinc-800 text-zinc-500 border border-white/5'
             }`}>
               +{pred.pointsEarned}

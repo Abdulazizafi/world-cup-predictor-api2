@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { apiSubmitPrediction } from '@/lib/api/client';
-import { formatMatchTime, getFlag, isPastKickoff } from '@/lib/utils';
+import { formatMatchTime, getFlag, getFlagUrl, isPastKickoff } from '@/lib/utils';
 import type { Match } from '@/types';
 
 interface MatchCardProps { match: Match; index?: number; }
@@ -53,9 +53,6 @@ export default function MatchCard({ match, index = 0 }: MatchCardProps) {
     } finally { setSaving(false); }
   }, [scoreA, scoreB, match.id, match.teamA, match.teamB, qc]);
 
-  const flagA = getFlag(match.teamA, match.teamAFlag);
-  const flagB = getFlag(match.teamB, match.teamBFlag);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -86,7 +83,16 @@ export default function MatchCard({ match, index = 0 }: MatchCardProps) {
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 mb-5">
           {/* Team A */}
           <div className="flex flex-col items-center gap-2">
-            <span className="text-4xl leading-none" role="img" aria-label={match.teamA}>{flagA}</span>
+            <div className="w-16 h-11 relative rounded-lg overflow-hidden border border-white/10 shadow-md flex items-center justify-center bg-zinc-900/40">
+              <img
+                src={getFlagUrl(match.teamA)}
+                alt={match.teamA}
+                className="w-full h-full object-cover animate-fade-in"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://flagcdn.com/w160/un.png';
+                }}
+              />
+            </div>
             <span className="text-xs font-bold uppercase tracking-wide text-center">{match.teamA}</span>
           </div>
 
@@ -117,7 +123,16 @@ export default function MatchCard({ match, index = 0 }: MatchCardProps) {
 
           {/* Team B */}
           <div className="flex flex-col items-center gap-2">
-            <span className="text-4xl leading-none" role="img" aria-label={match.teamB}>{flagB}</span>
+            <div className="w-16 h-11 relative rounded-lg overflow-hidden border border-white/10 shadow-md flex items-center justify-center bg-zinc-900/40">
+              <img
+                src={getFlagUrl(match.teamB)}
+                alt={match.teamB}
+                className="w-full h-full object-cover animate-fade-in"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://flagcdn.com/w160/un.png';
+                }}
+              />
+            </div>
             <span className="text-xs font-bold uppercase tracking-wide text-center">{match.teamB}</span>
           </div>
         </div>
