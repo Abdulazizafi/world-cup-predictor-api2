@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { RefreshCw, Filter } from 'lucide-react';
+import { RefreshCw, Filter, LayoutGrid, Clock, Flag, SlidersHorizontal, Calendar, Target, TrendingUp, Flame } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
 import TabNav from '@/components/layout/TabNav';
@@ -29,11 +29,37 @@ function MatchesTab() {
   });
 
   const [filter, setFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'UPCOMING' | 'LIVE' | 'FINISHED'>('ALL');
+  const [showStageFilter, setShowStageFilter] = useState(false);
+
   const stages = ['All', ...Array.from(new Set(matches.map((m: Match) => m.stage)))];
   const filtered = filter === 'All' ? matches : matches.filter((m: Match) => m.stage === filter);
 
   // Count active x2 double points tokens
   const x2Used = (matches as Match[]).filter((m: Match) => m.userPrediction?.useDoublePoints).length;
+
+  // Calculate Progress Stats
+  const predictedCount = matches.filter((m: Match) => m.userPrediction !== null).length;
+  const totalMatchesCount = matches.length;
+  const finishedPredicted = matches.filter((m: Match) => m.status === 'FINISHED' && m.userPrediction !== null);
+  const correctCount = finishedPredicted.filter((m: Match) => m.userPrediction!.pointsEarned >= 40).length;
+  const accuracyPct = finishedPredicted.length > 0 ? Math.round((correctCount / finishedPredicted.length) * 100) : 0;
+
+  let bestStreak = 0;
+  let currentStreak = 0;
+  const sortedFinishedPredictions = [...finishedPredicted].sort(
+    (a: Match, b: Match) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime()
+  );
+  for (const match of sortedFinishedPredictions) {
+    if (match.userPrediction && match.userPrediction.pointsEarned >= 40) {
+      currentStreak++;
+      if (currentStreak > bestStreak) {
+        bestStreak = currentStreak;
+      }
+    } else {
+      currentStreak = 0;
+    }
+  }
 
   // Sort matches: LIVE first, then PENDING (kickoff ascending), then FINISHED (kickoff descending)
   const sortedMatches = [...filtered].sort((a: Match, b: Match) => {
@@ -61,21 +87,147 @@ function MatchesTab() {
     return timeA - timeB;
   });
 
+  // Apply Status Filter
+  const statusFilteredMatches = sortedMatches.filter((m: Match) => {
+    if (statusFilter === 'ALL') return true;
+    if (statusFilter === 'UPCOMING') return m.status === 'PENDING';
+    if (statusFilter === 'LIVE') return m.status === 'LIVE';
+    return m.status === 'FINISHED';
+  });
+
   return (
     <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-black">⚽ Matches</h2>
+      {/* Your Progress Dashboard Card */}
+      <div className="glass rounded-2xl p-5 border border-white/5 relative overflow-hidden">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-white text-sm tracking-wide">Your Progress</h3>
+          <span className="text-xs text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center gap-0.5">
+            View Stats <span className="text-[10px]">&gt;</span>
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex items-center gap-3 bg-zinc-900/30 border border-white/5 rounded-xl p-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
+              <Calendar className="text-purple-400" size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Predicted</p>
+              <p className="text-base font-black text-white mt-0.5">
+                {predictedCount} <span className="text-xs text-zinc-500 font-bold">/ {totalMatchesCount}</span>
+              </p>
+              <p className="text-[9px] text-zinc-500 font-medium">Matches</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-zinc-900/30 border border-white/5 rounded-xl p-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <Target className="text-emerald-400" size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Correct</p>
+              <p className="text-base font-black text-white mt-0.5">{correctCount}</p>
+              <p className="text-[9px] text-zinc-500 font-medium">Predictions</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-zinc-900/30 border border-white/5 rounded-xl p-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+              <TrendingUp className="text-blue-400" size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Accuracy</p>
+              <p className="text-base font-black text-white mt-0.5">{accuracyPct}%</p>
+              <p className="text-[9px] text-zinc-500 font-medium">Outcomes</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-zinc-900/30 border border-white/5 rounded-xl p-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+              <Flame className="text-amber-400" size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Best Streak</p>
+              <p className="text-base font-black text-white mt-0.5">{bestStreak}</p>
+              <p className="text-[9px] text-zinc-500 font-medium">Matches</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black">Matches</h2>
+        <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full shadow-gold-glow/10">
             ⚡ Double Points: {x2Used}/5 used
           </span>
+          {stages.length > 2 && (
+            <button
+              onClick={() => setShowStageFilter(!showStageFilter)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                showStageFilter
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                  : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:text-white'
+              }`}
+            >
+              <SlidersHorizontal size={13} />
+              Filters
+            </button>
+          )}
         </div>
-        <p className="text-xs text-zinc-500">Exact = 100pts · Outcome = 40pts (Doubled with x2)</p>
       </div>
 
-      {/* Stage filter dropdown */}
-      {stages.length > 2 && (
-        <div className="flex items-center gap-2 max-w-xs">
+      {/* Horizontal Status Filter Bar */}
+      <div className="flex gap-1 bg-zinc-900/40 p-1 rounded-xl border border-white/5 select-none w-fit overflow-x-auto max-w-full shrink-0">
+        <button
+          onClick={() => setStatusFilter('ALL')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+            statusFilter === 'ALL'
+              ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25 shadow-gold-glow/5'
+              : 'text-zinc-400 hover:text-white border border-transparent'
+          }`}
+        >
+          <LayoutGrid size={13} />
+          All Matches
+        </button>
+        <button
+          onClick={() => setStatusFilter('UPCOMING')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+            statusFilter === 'UPCOMING'
+              ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25 shadow-gold-glow/5'
+              : 'text-zinc-400 hover:text-white border border-transparent'
+          }`}
+        >
+          <Clock size={13} />
+          Upcoming
+        </button>
+        <button
+          onClick={() => setStatusFilter('LIVE')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+            statusFilter === 'LIVE'
+              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 shadow-gold-glow/5'
+              : 'text-zinc-400 hover:text-white border border-transparent'
+          }`}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Live
+        </button>
+        <button
+          onClick={() => setStatusFilter('FINISHED')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+            statusFilter === 'FINISHED'
+              ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25 shadow-gold-glow/5'
+              : 'text-zinc-400 hover:text-white border border-transparent'
+          }`}
+        >
+          <Flag size={13} />
+          Finished
+        </button>
+      </div>
+
+      {/* Stage filter dropdown (toggled via Filters button) */}
+      {showStageFilter && stages.length > 2 && (
+        <div className="flex items-center gap-2 max-w-xs animate-fade-in">
           <Filter size={14} className="text-zinc-400 shrink-0" />
           <div className="relative flex-1">
             <select
@@ -89,7 +241,6 @@ function MatchesTab() {
                 </option>
               ))}
             </select>
-            {/* Custom arrow decoration */}
             <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-zinc-500">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
@@ -103,7 +254,7 @@ function MatchesTab() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[...Array(4)].map((_, i) => <MatchCardSkeleton key={i} />)}
         </div>
-      ) : sortedMatches.length === 0 ? (
+      ) : statusFilteredMatches.length === 0 ? (
         <div className="flex flex-col items-center py-16 text-center text-zinc-500 gap-3">
           <span className="text-5xl">🏟️</span>
           <p className="font-medium">No matches found</p>
@@ -111,7 +262,7 @@ function MatchesTab() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {sortedMatches.map((match: Match, i: number) => (
+          {statusFilteredMatches.map((match: Match, i: number) => (
             <MatchCard key={match.id} match={match} index={i} x2Remaining={5 - x2Used} />
           ))}
         </div>
