@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
@@ -15,8 +15,16 @@ export default function LoginPage() {
   const [showPw, setShowPw]     = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
-  const setUser = useAppStore(s => s.setUser);
+  const { setUser, user, hydrated } = useAppStore();
   const router  = useRouter();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!hydrated) return;
+    if (user) {
+      router.replace(user.groupId ? '/dashboard' : '/group-setup');
+    }
+  }, [user, hydrated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

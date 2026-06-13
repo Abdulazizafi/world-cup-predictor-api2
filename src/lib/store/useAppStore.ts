@@ -35,6 +35,9 @@ export const useAppStore = create<AppState>()(
         user: state.user,
         activeTab: state.activeTab,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated();
+      },
     }
   )
 );

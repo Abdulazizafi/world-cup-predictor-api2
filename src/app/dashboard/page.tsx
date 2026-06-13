@@ -127,17 +127,11 @@ function LeaderboardTab() {
             </div>
           )}
 
-          {/* List of members (shows rest if podium is active, otherwise shows everyone) */}
+          {/* List of members (shows everyone in the league) */}
           <div className="space-y-2">
-            {leaderboard.length >= 3 ? (
-              below3.map((entry, i) => (
-                <LeaderboardRow key={entry.userId} entry={entry} index={i} />
-              ))
-            ) : (
-              leaderboard.map((entry, i) => (
-                <LeaderboardRow key={entry.userId} entry={entry} index={i} />
-              ))
-            )}
+            {leaderboard.map((entry, i) => (
+              <LeaderboardRow key={entry.userId} entry={entry} index={i} />
+            ))}
           </div>
         </>
       )}
@@ -245,19 +239,21 @@ const tabVariants = {
 const TAB_ORDER: DashTab[] = ['matches', 'leaderboard', 'predictions', 'friends'];
 
 export default function DashboardPage() {
-  const { activeTab, user } = useAppStore();
+  const { activeTab, user, hydrated } = useAppStore();
   const router = useRouter();
   const [prevTab, setPrevTab] = useState<DashTab>(activeTab);
   const [direction, setDirection] = useState(0);
 
   // Auth guard — redirect to login if no session, or to group-setup if no group
   useEffect(() => {
+    if (!hydrated) return;
+
     if (!user) {
       router.replace('/login');
     } else if (!user.groupId) {
       router.replace('/group-setup');
     }
-  }, [user, router]);
+  }, [user, hydrated, router]);
 
   useEffect(() => {
     const prevIndex = TAB_ORDER.indexOf(prevTab);
@@ -266,7 +262,7 @@ export default function DashboardPage() {
     setPrevTab(activeTab);
   }, [activeTab]); // eslint-disable-line
 
-  if (!user) return (
+  if (!hydrated || !user) return (
     <div className="min-h-screen flex items-center justify-center bg-pattern">
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
