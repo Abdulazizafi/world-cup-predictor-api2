@@ -103,16 +103,14 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
 
       <div className="p-5">
         {/* Header row */}
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center mb-5">
-          <div className="text-left">
+        <div className="flex justify-between items-start mb-5">
+          <div className="flex flex-col items-start gap-1">
+            <StatusBadge status={match.status} />
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
               {match.stage}
             </span>
           </div>
-          <div className="flex justify-center">
-            <StatusBadge status={match.status} />
-          </div>
-          <div className="flex justify-end min-h-[20px]">
+          <div className="flex justify-end min-h-[32px] items-center">
             {match.status === 'PENDING' && (
               <CountdownTimer kickoffTime={match.matchTime} />
             )}
