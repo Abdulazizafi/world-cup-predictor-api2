@@ -111,9 +111,15 @@ function LeaderboardTab() {
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => <LeaderboardRowSkeleton key={i} />)}
         </div>
+      ) : leaderboard.length === 0 ? (
+        <div className="flex flex-col items-center py-16 text-center text-zinc-500 gap-3">
+          <span className="text-5xl">🏆</span>
+          <p className="font-medium">No members in this league</p>
+          <p className="text-sm">Invite friends using your league's invite code!</p>
+        </div>
       ) : (
         <>
-          {/* Podium for top 3 */}
+          {/* Podium for top 3 (only shown if there are at least 3 players) */}
           {leaderboard.length >= 3 && (
             <div className="glass rounded-2xl overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500" />
@@ -121,14 +127,18 @@ function LeaderboardTab() {
             </div>
           )}
 
-          {/* Scrollable rest */}
-          {below3.length > 0 && (
-            <div className="space-y-2">
-              {below3.map((entry, i) => (
+          {/* List of members (shows rest if podium is active, otherwise shows everyone) */}
+          <div className="space-y-2">
+            {leaderboard.length >= 3 ? (
+              below3.map((entry, i) => (
                 <LeaderboardRow key={entry.userId} entry={entry} index={i} />
-              ))}
-            </div>
-          )}
+              ))
+            ) : (
+              leaderboard.map((entry, i) => (
+                <LeaderboardRow key={entry.userId} entry={entry} index={i} />
+              ))
+            )}
+          </div>
         </>
       )}
     </div>
@@ -240,9 +250,13 @@ export default function DashboardPage() {
   const [prevTab, setPrevTab] = useState<DashTab>(activeTab);
   const [direction, setDirection] = useState(0);
 
-  // Auth guard — redirect to login if no session
+  // Auth guard — redirect to login if no session, or to group-setup if no group
   useEffect(() => {
-    if (!user) router.replace('/login');
+    if (!user) {
+      router.replace('/login');
+    } else if (!user.groupId) {
+      router.replace('/group-setup');
+    }
   }, [user, router]);
 
   useEffect(() => {
