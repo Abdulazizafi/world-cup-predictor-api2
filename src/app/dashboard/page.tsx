@@ -32,6 +32,32 @@ function MatchesTab() {
   const stages = ['All', ...Array.from(new Set(matches.map((m: Match) => m.stage)))];
   const filtered = filter === 'All' ? matches : matches.filter((m: Match) => m.stage === filter);
 
+  // Sort matches: LIVE first, then PENDING (kickoff ascending), then FINISHED (kickoff descending)
+  const sortedMatches = [...filtered].sort((a: Match, b: Match) => {
+    const statusPriority = (status: string) => {
+      if (status === 'LIVE') return 1;
+      if (status === 'PENDING') return 2;
+      return 3;
+    };
+
+    const prioA = statusPriority(a.status);
+    const prioB = statusPriority(b.status);
+
+    if (prioA !== prioB) {
+      return prioA - prioB;
+    }
+
+    const timeA = new Date(a.matchTime).getTime();
+    const timeB = new Date(b.matchTime).getTime();
+
+    // For finished matches, we want descending order (most recently finished first)
+    if (a.status === 'FINISHED') {
+      return timeB - timeA;
+    }
+    // For pending/live matches, we want ascending order (soonest kickoff first)
+    return timeA - timeB;
+  });
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -69,7 +95,7 @@ function MatchesTab() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[...Array(4)].map((_, i) => <MatchCardSkeleton key={i} />)}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : sortedMatches.length === 0 ? (
         <div className="flex flex-col items-center py-16 text-center text-zinc-500 gap-3">
           <span className="text-5xl">🏟️</span>
           <p className="font-medium">No matches found</p>
@@ -77,7 +103,7 @@ function MatchesTab() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {filtered.map((match: Match, i: number) => (
+          {sortedMatches.map((match: Match, i: number) => (
             <MatchCard key={match.id} match={match} index={i} />
           ))}
         </div>
