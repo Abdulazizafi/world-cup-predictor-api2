@@ -302,17 +302,42 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                       </div>
                     </div>
 
-                    {/* X2 Status */}
+                    {/* X2 Toggle */}
                     <div className="shrink-0 flex items-center">
-                      <div
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border ${
-                          useDoublePoints
-                            ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                            : 'bg-zinc-900/30 border-white/5 text-zinc-500'
-                        }`}
-                      >
-                        {useDoublePoints ? '⚡ 2X Active' : 'Standard'}
-                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer select-none py-1 group/toggle bg-zinc-950 border border-white/10 hover:border-amber-500/30 hover:bg-zinc-900/60 rounded-xl px-3 py-2 transition-all">
+                        <input
+                          type="checkbox"
+                          checked={useDoublePoints}
+                          disabled={saving}
+                          onChange={async (e) => {
+                            const checked = e.target.checked;
+                            if (checked && x2Remaining <= 0 && !match.userPrediction?.useDoublePoints) {
+                              toast.error('You have used all 5 Double Points (x2) tokens!');
+                              return;
+                            }
+                            setSaving(true);
+                            try {
+                              const a = parseInt(scoreA, 10);
+                              const b = parseInt(scoreB, 10);
+                              await apiSubmitPrediction(match.id, a, b, checked);
+                              await qc.invalidateQueries({ queryKey: ['matches'] });
+                              toast.success(
+                                `⚽ Double Points ${checked ? 'enabled' : 'disabled'} for ${match.teamA} vs ${match.teamB}`,
+                                { id: `pred-${match.id}` }
+                              );
+                            } catch (err: any) {
+                              const msg = err.response?.data?.message || 'Could not update double points';
+                              toast.error(msg);
+                            } finally {
+                              setSaving(false);
+                            }
+                          }}
+                          className="rounded border-white/10 bg-zinc-950 text-amber-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer accent-amber-500 disabled:opacity-50"
+                        />
+                        <span className="text-xs font-bold text-zinc-300 group-hover/toggle:text-white transition-colors flex items-center gap-1">
+                          ⚡ X2
+                        </span>
+                      </label>
                     </div>
                   </div>
 
