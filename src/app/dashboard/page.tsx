@@ -39,23 +39,29 @@ function MatchesTab() {
         <p className="text-xs text-zinc-500">Exact = 100pts · Outcome = 40pts</p>
       </div>
 
-      {/* Stage filter pills */}
+      {/* Stage filter dropdown */}
       {stages.length > 2 && (
-        <div className="flex gap-2 flex-wrap items-center">
-          <Filter size={13} className="text-zinc-500" />
-          {stages.map(s => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-                filter === s
-                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                  : 'border-white/8 text-zinc-400 hover:border-white/15 hover:text-white'
-              }`}
+        <div className="flex items-center gap-2 max-w-xs">
+          <Filter size={14} className="text-zinc-400 shrink-0" />
+          <div className="relative flex-1">
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="w-full bg-zinc-900/80 border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-all appearance-none cursor-pointer"
             >
-              {s}
-            </button>
-          ))}
+              {stages.map((s) => (
+                <option key={s} value={s} className="bg-zinc-950 text-white">
+                  {s === 'All' ? '📅 All Stages / Groups' : s}
+                </option>
+              ))}
+            </select>
+            {/* Custom arrow decoration */}
+            <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-zinc-500">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
       )}
 
