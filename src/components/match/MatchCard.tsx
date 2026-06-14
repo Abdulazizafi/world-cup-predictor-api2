@@ -8,10 +8,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import StatusBadge from '@/components/ui/StatusBadge';
 import StepperInput from '@/components/ui/StepperInput';
 import CountdownTimer from './CountdownTimer';
-import { apiSubmitPrediction, apiUpdateMatchScore } from '@/lib/api/client';
+import { apiSubmitPrediction } from '@/lib/api/client';
 import { formatMatchTime, getFlagUrl } from '@/lib/utils';
 import type { Match } from '@/types';
-import { useAppStore } from '@/lib/store/useAppStore';
 
 interface MatchCardProps {
   match: Match;
@@ -21,8 +20,6 @@ interface MatchCardProps {
 
 export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardProps) {
   const qc = useQueryClient();
-  const { user } = useAppStore();
-  const isAdmin = user && ['abdulazizafi', 'abdulazizalowaifi'].includes(user.username.toLowerCase());
   
   const now = Date.now();
   const matchTimeMs = new Date(match.matchTime).getTime();
@@ -45,17 +42,6 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
   );
   const [saving, setSaving] = useState(false);
 
-  // Admin Override States
-  const [isAdminEditing, setIsAdminEditing] = useState<boolean>(false);
-  const [adminScoreA, setAdminScoreA] = useState<string>(
-    match.scoreA !== null ? String(match.scoreA) : '',
-  );
-  const [adminScoreB, setAdminScoreB] = useState<string>(
-    match.scoreB !== null ? String(match.scoreB) : '',
-  );
-  const [adminStatus, setAdminStatus] = useState<string>(match.status);
-  const [adminSaving, setAdminSaving] = useState<boolean>(false);
-
   const { date, time } = formatMatchTime(match.matchTime);
 
   // Sync state when props update (e.g. after query invalidation or tab navigation)
@@ -72,14 +58,6 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
       setIsEditing(false);
     }
   }, [match.userPrediction]);
-
-  // Sync admin states when match details change
-  useEffect(() => {
-    setAdminScoreA(match.scoreA !== null ? String(match.scoreA) : '');
-    setAdminScoreB(match.scoreB !== null ? String(match.scoreB) : '');
-    setAdminStatus(match.status);
-    setIsAdminEditing(false);
-  }, [match.scoreA, match.scoreB, match.status]);
 
   const handleSave = useCallback(async () => {
     const a = parseInt(scoreA, 10);
@@ -132,19 +110,6 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
                 {match.stage}
               </span>
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => setIsAdminEditing(!isAdminEditing)}
-                  className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border transition-colors ${
-                    isAdminEditing
-                      ? 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.05)]'
-                      : 'bg-zinc-800 border-white/5 text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  ⚙️ Admin
-                </button>
-              )}
             </div>
           </div>
           <div className="flex justify-end min-h-[32px] items-center">
@@ -225,135 +190,99 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
 
         {/* Prediction section */}
         <div className="border-t border-white/5 pt-4">
-          {isAdmin && isAdminEditing ? (
-            <div className="space-y-4 animate-fade-in bg-red-500/5 border border-red-500/10 rounded-2xl p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-red-400 uppercase tracking-widest flex items-center gap-1">
-                  🚨 Admin Override
-                </span>
-                <select
-                  value={adminStatus}
-                  onChange={(e) => {
-                    const statusVal = e.target.value;
-                    setAdminStatus(statusVal);
-                    if (statusVal === 'PENDING') {
-                      setAdminScoreA('');
-                      setAdminScoreB('');
-                    }
-                  }}
-                  className="bg-zinc-950 border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:border-red-500/50 cursor-pointer"
-                >
-                  <option value="PENDING">PENDING</option>
-                  <option value="LIVE">LIVE</option>
-                  <option value="FINISHED">FINISHED</option>
-                </select>
-              </div>
+          {/* Case 1: Match is locked AND no prediction was made */}
+          {locked && !match.userPrediction && (
+            <div className="flex items-center justify-center gap-2 py-3 text-xs text-zinc-500 bg-zinc-950/40 border border-white/5 rounded-xl">
+              {tooEarly ? (
+                <>
+                  <Clock size={12} className="text-amber-500/80" />
+                  <span>
+                    Opens{' '}
+                    {new Date(opensAt).toLocaleString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Lock size={12} />
+                  <span>
+                    {match.status === 'FINISHED' ? 'No prediction made' : 'Predictions closed'}
+                  </span>
+                </>
+              )}
+            </div>
+          )}
 
-              {adminStatus !== 'PENDING' && (
-                <div className="space-y-2">
-                  <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
-                    Actual Match Score
-                  </p>
+          {/* Case 2: Match is locked AND prediction exists */}
+          {locked && match.userPrediction && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                {/* Disabled Steppers */}
+                <div className="flex-1 max-w-[220px]">
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                     <StepperInput
-                      value={adminScoreA}
-                      onChange={setAdminScoreA}
-                      disabled={false}
+                      value={scoreA}
+                      onChange={setScoreA}
+                      disabled={true}
                     />
                     <span className="text-zinc-600 font-black text-sm">–</span>
                     <StepperInput
-                      value={adminScoreB}
-                      onChange={setAdminScoreB}
-                      disabled={false}
+                      value={scoreB}
+                      onChange={setScoreB}
+                      disabled={true}
                     />
                   </div>
                 </div>
-              )}
 
-              {/* Save & Cancel Buttons */}
-              <div className="flex gap-2 w-full pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAdminScoreA(match.scoreA !== null ? String(match.scoreA) : '');
-                    setAdminScoreB(match.scoreB !== null ? String(match.scoreB) : '');
-                    setAdminStatus(match.status);
-                    setIsAdminEditing(false);
-                  }}
-                  className="flex-1 bg-zinc-900 border border-white/5 hover:bg-zinc-800 text-zinc-300 font-bold py-3 rounded-xl transition-all text-xs"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={adminSaving}
-                  onClick={async () => {
-                    let scoreAVal: number | null = null;
-                    let scoreBVal: number | null = null;
-                    if (adminStatus !== 'PENDING') {
-                      scoreAVal = parseInt(adminScoreA, 10);
-                      scoreBVal = parseInt(adminScoreB, 10);
-                      if (isNaN(scoreAVal) || isNaN(scoreBVal) || scoreAVal < 0 || scoreBVal < 0) {
-                        toast.error('Enter valid match scores (>= 0)');
-                        return;
-                      }
-                    }
+                {/* X2 Badge */}
+                <div className="shrink-0 flex items-center">
+                  <div
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border ${
+                      useDoublePoints
+                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                        : 'bg-zinc-900/30 border-white/5 text-zinc-500'
+                    }`}
+                  >
+                    {useDoublePoints ? '⚡ 2X Active' : 'Standard'}
+                  </div>
+                </div>
+              </div>
 
-                    setAdminSaving(true);
-                    try {
-                      await apiUpdateMatchScore(match.id, scoreAVal, scoreBVal, adminStatus);
-                      await qc.invalidateQueries({ queryKey: ['matches'] });
-                      setIsAdminEditing(false);
-                      toast.success('⚙️ Match override saved successfully!');
-                    } catch (err: any) {
-                      const msg = err.response?.data?.message || 'Could not save admin override';
-                      toast.error(msg);
-                    } finally {
-                      setAdminSaving(false);
-                    }
-                  }}
-                  className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-400 hover:to-orange-400 disabled:opacity-60 text-white font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.15)] transition-all duration-200 text-xs min-h-[44px]"
-                >
-                  {adminSaving ? (
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    '💾'
-                  )}
-                  {adminSaving ? 'Saving...' : 'Save Override'}
-                </button>
+              {/* Bottom Success / Status Bar */}
+              <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-semibold">
+                  <Lock size={12} className="text-zinc-500" />
+                  <span>Prediction locked</span>
+                </div>
+                {match.status === 'FINISHED' && (
+                  <span className="inline-flex items-center gap-1 bg-amber-500/15 border border-amber-500/25 text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full shadow-gold-glow/5 animate-fade-in">
+                    +{match.userPrediction.pointsEarned} pts
+                  </span>
+                )}
               </div>
             </div>
-          ) : (
+          )}
+
+          {/* Case 3: Match is NOT locked */}
+          {!locked && (
             <>
-              {/* Case 1: Match is locked AND no prediction was made */}
-              {locked && !match.userPrediction && (
-                <div className="flex items-center justify-center gap-2 py-3 text-xs text-zinc-500 bg-zinc-950/40 border border-white/5 rounded-xl">
-                  {tooEarly ? (
-                    <>
-                      <Clock size={12} className="text-amber-500/80" />
-                      <span>
-                        Opens{' '}
-                        {new Date(opensAt).toLocaleString('en-GB', {
-                          day: 'numeric',
-                          month: 'short',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock size={12} />
-                      <span>
-                        {match.status === 'FINISHED' ? 'No prediction made' : 'Predictions closed'}
-                      </span>
-                    </>
-                  )}
-                </div>
+              {/* If NOT editing and NO prediction exists */}
+              {!isEditing && !match.userPrediction && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-bold py-3.5 rounded-xl shadow-gold-glow hover:shadow-gold-glow-lg transition-all duration-200 text-sm min-h-[44px]"
+                >
+                  ✏️ Make Prediction
+                </button>
               )}
 
-              {/* Case 2: Match is locked AND prediction exists */}
-              {locked && match.userPrediction && (
+              {/* If NOT editing but prediction DOES exist (Saved State) */}
+              {!isEditing && match.userPrediction && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-4">
                     {/* Disabled Steppers */}
@@ -373,212 +302,146 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                       </div>
                     </div>
 
-                    {/* X2 Badge */}
+                    {/* X2 Toggle */}
                     <div className="shrink-0 flex items-center">
-                      <div
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border ${
-                          useDoublePoints
-                            ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                            : 'bg-zinc-900/30 border-white/5 text-zinc-500'
-                        }`}
-                      >
-                        {useDoublePoints ? '⚡ 2X Active' : 'Standard'}
-                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer select-none py-1 group/toggle bg-zinc-950 border border-white/10 hover:border-amber-500/30 hover:bg-zinc-900/60 rounded-xl px-3 py-2 transition-all">
+                        <input
+                          type="checkbox"
+                          checked={useDoublePoints}
+                          disabled={saving}
+                          onChange={async (e) => {
+                            const checked = e.target.checked;
+                            if (checked && x2Remaining <= 0 && !match.userPrediction?.useDoublePoints) {
+                              toast.error('You have used all 5 Double Points (x2) tokens!');
+                              return;
+                            }
+                            setSaving(true);
+                            try {
+                              const a = parseInt(scoreA, 10);
+                              const b = parseInt(scoreB, 10);
+                              await apiSubmitPrediction(match.id, a, b, checked);
+                              await qc.invalidateQueries({ queryKey: ['matches'] });
+                              toast.success(
+                                `⚽ Double Points ${checked ? 'enabled' : 'disabled'} for ${match.teamA} vs ${match.teamB}`,
+                                { id: `pred-${match.id}` }
+                              );
+                            } catch (err: any) {
+                              const msg = err.response?.data?.message || 'Could not update double points';
+                              toast.error(msg);
+                            } finally {
+                              setSaving(false);
+                            }
+                          }}
+                          className="rounded border-white/10 bg-zinc-950 text-amber-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer accent-amber-500 disabled:opacity-50"
+                        />
+                        <span className="text-xs font-bold text-zinc-300 group-hover/toggle:text-white transition-colors flex items-center gap-1">
+                          ⚡ X2
+                        </span>
+                      </label>
                     </div>
                   </div>
 
-                  {/* Bottom Success / Status Bar */}
+                  {/* Bottom Success Footer: Prediction saved | Edit Prediction */}
                   <div className="flex items-center justify-between border-t border-white/5 pt-3">
-                    <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-semibold">
-                      <Lock size={12} className="text-zinc-500" />
-                      <span>Prediction locked</span>
+                    <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Prediction saved
                     </div>
-                    {match.status === 'FINISHED' && (
-                      <span className="inline-flex items-center gap-1 bg-amber-500/15 border border-amber-500/25 text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full shadow-gold-glow/5 animate-fade-in">
-                        +{match.userPrediction.pointsEarned} pts
-                      </span>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(true)}
+                      className="text-xs font-bold text-amber-400 hover:text-amber-300 hover:underline transition-colors"
+                    >
+                      Edit Prediction
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* Case 3: Match is NOT locked */}
-              {!locked && (
-                <>
-                  {/* If NOT editing and NO prediction exists */}
-                  {!isEditing && !match.userPrediction && (
+              {/* If in edit mode (Making or Editing Prediction) */}
+              {isEditing && (
+                <div className="space-y-4">
+                  <p className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">
+                    {match.userPrediction ? '✏️ Edit your prediction' : '⚽ Make your prediction'}
+                  </p>
+
+                  <div className="flex items-center justify-between gap-4">
+                    {/* Enabled Steppers */}
+                    <div className="flex-1 max-w-[220px]">
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                        <StepperInput
+                          value={scoreA}
+                          onChange={setScoreA}
+                          disabled={false}
+                        />
+                        <span className="text-zinc-600 font-black text-sm">–</span>
+                        <StepperInput
+                          value={scoreB}
+                          onChange={setScoreB}
+                          disabled={false}
+                        />
+                      </div>
+                    </div>
+
+                    {/* X2 Checkbox */}
+                    <div className="shrink-0 flex items-center">
+                      <label className="flex items-center gap-2 cursor-pointer select-none py-1 group/toggle bg-zinc-950 border border-white/10 hover:border-amber-500/30 hover:bg-zinc-900/60 rounded-xl px-3 py-2 transition-all">
+                        <input
+                          type="checkbox"
+                          checked={useDoublePoints}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            if (checked && x2Remaining <= 0 && !match.userPrediction?.useDoublePoints) {
+                              toast.error('You have used all 5 Double Points (x2) tokens!');
+                              return;
+                            }
+                            setUseDoublePoints(checked);
+                          }}
+                          className="rounded border-white/10 bg-zinc-950 text-amber-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer accent-amber-500"
+                        />
+                        <span className="text-xs font-bold text-zinc-300 group-hover/toggle:text-white transition-colors flex items-center gap-1">
+                          ⚡ X2
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Save & Cancel Buttons */}
+                  <div className="flex gap-2 w-full pt-2">
                     <button
                       type="button"
-                      onClick={() => setIsEditing(true)}
-                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-bold py-3.5 rounded-xl shadow-gold-glow hover:shadow-gold-glow-lg transition-all duration-200 text-sm min-h-[44px]"
+                      onClick={() => {
+                        if (match.userPrediction) {
+                          setScoreA(String(match.userPrediction.predictedScoreA));
+                          setScoreB(String(match.userPrediction.predictedScoreB));
+                          setUseDoublePoints(!!match.userPrediction.useDoublePoints);
+                        } else {
+                          setScoreA('');
+                          setScoreB('');
+                          setUseDoublePoints(false);
+                        }
+                        setIsEditing(false);
+                      }}
+                      className="flex-1 bg-zinc-900 border border-white/5 hover:bg-zinc-800 text-zinc-300 font-bold py-3 rounded-xl transition-all text-xs"
                     >
-                      ✏️ Make Prediction
+                      Cancel
                     </button>
-                  )}
-
-                  {/* If NOT editing but prediction DOES exist (Saved State) */}
-                  {!isEditing && match.userPrediction && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between gap-4">
-                        {/* Disabled Steppers */}
-                        <div className="flex-1 max-w-[220px]">
-                          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                            <StepperInput
-                              value={scoreA}
-                              onChange={setScoreA}
-                              disabled={true}
-                            />
-                            <span className="text-zinc-600 font-black text-sm">–</span>
-                            <StepperInput
-                              value={scoreB}
-                              onChange={setScoreB}
-                              disabled={true}
-                            />
-                          </div>
-                        </div>
-
-                        {/* X2 Toggle */}
-                        <div className="shrink-0 flex items-center">
-                          <label className="flex items-center gap-2 cursor-pointer select-none py-1 group/toggle bg-zinc-950 border border-white/10 hover:border-amber-500/30 hover:bg-zinc-900/60 rounded-xl px-3 py-2 transition-all">
-                            <input
-                              type="checkbox"
-                              checked={useDoublePoints}
-                              disabled={saving}
-                              onChange={async (e) => {
-                                const checked = e.target.checked;
-                                if (checked && x2Remaining <= 0 && !match.userPrediction?.useDoublePoints) {
-                                  toast.error('You have used all 5 Double Points (x2) tokens!');
-                                  return;
-                                }
-                                setSaving(true);
-                                try {
-                                  const a = parseInt(scoreA, 10);
-                                  const b = parseInt(scoreB, 10);
-                                  await apiSubmitPrediction(match.id, a, b, checked);
-                                  await qc.invalidateQueries({ queryKey: ['matches'] });
-                                  toast.success(
-                                    `⚽ Double Points ${checked ? 'enabled' : 'disabled'} for ${match.teamA} vs ${match.teamB}`,
-                                    { id: `pred-${match.id}` }
-                                  );
-                                } catch (err: any) {
-                                  const msg = err.response?.data?.message || 'Could not update double points';
-                                  toast.error(msg);
-                                } finally {
-                                  setSaving(false);
-                                }
-                              }}
-                              className="rounded border-white/10 bg-zinc-950 text-amber-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer accent-amber-500 disabled:opacity-50"
-                            />
-                            <span className="text-xs font-bold text-zinc-300 group-hover/toggle:text-white transition-colors flex items-center gap-1">
-                              ⚡ X2
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Bottom Success Footer: Prediction saved | Edit Prediction */}
-                      <div className="flex items-center justify-between border-t border-white/5 pt-3">
-                        <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          Prediction saved
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setIsEditing(true)}
-                          className="text-xs font-bold text-amber-400 hover:text-amber-300 hover:underline transition-colors"
-                        >
-                          Edit Prediction
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* If in edit mode (Making or Editing Prediction) */}
-                  {isEditing && (
-                    <div className="space-y-4">
-                      <p className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">
-                        {match.userPrediction ? '✏️ Edit your prediction' : '⚽ Make your prediction'}
-                      </p>
-
-                      <div className="flex items-center justify-between gap-4">
-                        {/* Enabled Steppers */}
-                        <div className="flex-1 max-w-[220px]">
-                          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                            <StepperInput
-                              value={scoreA}
-                              onChange={setScoreA}
-                              disabled={false}
-                            />
-                            <span className="text-zinc-600 font-black text-sm">–</span>
-                            <StepperInput
-                              value={scoreB}
-                              onChange={setScoreB}
-                              disabled={false}
-                            />
-                          </div>
-                        </div>
-
-                        {/* X2 Checkbox */}
-                        <div className="shrink-0 flex items-center">
-                          <label className="flex items-center gap-2 cursor-pointer select-none py-1 group/toggle bg-zinc-950 border border-white/10 hover:border-amber-500/30 hover:bg-zinc-900/60 rounded-xl px-3 py-2 transition-all">
-                            <input
-                              type="checkbox"
-                              checked={useDoublePoints}
-                              onChange={(e) => {
-                                const checked = e.target.checked;
-                                if (checked && x2Remaining <= 0 && !match.userPrediction?.useDoublePoints) {
-                                  toast.error('You have used all 5 Double Points (x2) tokens!');
-                                  return;
-                                }
-                                setUseDoublePoints(checked);
-                              }}
-                              className="rounded border-white/10 bg-zinc-950 text-amber-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer accent-amber-500"
-                            />
-                            <span className="text-xs font-bold text-zinc-300 group-hover/toggle:text-white transition-colors flex items-center gap-1">
-                              ⚡ X2
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Save & Cancel Buttons */}
-                      <div className="flex gap-2 w-full pt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (match.userPrediction) {
-                              setScoreA(String(match.userPrediction.predictedScoreA));
-                              setScoreB(String(match.userPrediction.predictedScoreB));
-                              setUseDoublePoints(!!match.userPrediction.useDoublePoints);
-                            } else {
-                              setScoreA('');
-                              setScoreB('');
-                              setUseDoublePoints(false);
-                            }
-                            setIsEditing(false);
-                          }}
-                          className="flex-1 bg-zinc-900 border border-white/5 hover:bg-zinc-800 text-zinc-300 font-bold py-3 rounded-xl transition-all text-xs"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          id={`predict-btn-${match.id}`}
-                          onClick={handleSave}
-                          disabled={saving}
-                          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 disabled:opacity-60 text-black font-bold py-3 rounded-xl shadow-gold-glow hover:shadow-gold-glow-lg transition-all duration-200 text-xs min-h-[44px]"
-                        >
-                          {saving ? (
-                            <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                          ) : (
-                            '💾'
-                          )}
-                          {saving ? 'Saving...' : 'Save'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
+                    <button
+                      type="button"
+                      id={`predict-btn-${match.id}`}
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 disabled:opacity-60 text-black font-bold py-3 rounded-xl shadow-gold-glow hover:shadow-gold-glow-lg transition-all duration-200 text-xs min-h-[44px]"
+                    >
+                      {saving ? (
+                        <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                      ) : (
+                        '💾'
+                      )}
+                      {saving ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </div>
               )}
             </>
           )}
