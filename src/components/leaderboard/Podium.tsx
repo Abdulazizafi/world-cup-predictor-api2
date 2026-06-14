@@ -11,7 +11,7 @@ const podiumConfig = [
   { pos: 3, height: 'h-12', avatarSize: 'w-12 h-12', textSize: 'text-sm',  ring: 'ring-1 ring-amber-700', color: 'from-amber-700 to-amber-900', label: 'text-amber-700', order: 'order-3' },
 ];
 
-const medals = ['🥇', '🥈', '🥉'];
+
 
 interface PodiumProps {
   entries: LeaderboardEntry[];
@@ -66,7 +66,7 @@ export default function Podium({ entries }: PodiumProps) {
             <div className={`${height} w-20 bg-gradient-to-b ${color} opacity-20 rounded-t-xl relative`}>
               <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${color} opacity-60 rounded-t-xl`} />
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl">{medals[pos - 1]}</span>
+                <span className="text-3xl font-black opacity-40 text-white">{pos}</span>
               </div>
             </div>
           </motion.div>

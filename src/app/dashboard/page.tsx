@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { RefreshCw, Filter, LayoutGrid, Clock, Flag, SlidersHorizontal, Calendar, Target, TrendingUp, Flame } from 'lucide-react';
+import { RefreshCw, Filter, LayoutGrid, Clock, Flag, SlidersHorizontal, Calendar, Target, TrendingUp, Flame, Star, Trophy, Users, Zap } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
 import TabNav from '@/components/layout/TabNav';
@@ -184,7 +184,8 @@ function MatchesTab() {
         <h2 className="text-xl font-black">Matches</h2>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full shadow-gold-glow/10">
-            ⚡ Double Points: {x2Used}/5 used
+            <Zap size={11} className="fill-amber-400 text-amber-400" />
+            Double Points: {x2Used}/5 used
           </span>
           {stages.length > 2 && (
             <button
@@ -262,7 +263,7 @@ function MatchesTab() {
             >
               {stages.map((s) => (
                 <option key={s} value={s} className="bg-zinc-950 text-white">
-                  {s === 'All' ? '📅 All Stages / Groups' : s}
+                  {s === 'All' ? 'All Stages / Groups' : s}
                 </option>
               ))}
             </select>
@@ -281,7 +282,7 @@ function MatchesTab() {
         </div>
       ) : statusFilteredMatches.length === 0 ? (
         <div className="flex flex-col items-center py-16 text-center text-zinc-500 gap-3">
-          <span className="text-5xl">🏟️</span>
+          <Calendar size={48} className="text-zinc-650" />
           <p className="font-medium">No matches found</p>
           <p className="text-sm">Match data syncs from the World Cup API automatically</p>
         </div>
@@ -313,7 +314,10 @@ function LeaderboardTab() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black">🏆 {user?.groupName ?? 'Leaderboard'}</h2>
+        <h2 className="text-xl font-black flex items-center gap-2">
+          <Trophy className="text-amber-400 fill-amber-400/10" size={20} />
+          <span>{user?.groupName ?? 'Leaderboard'}</span>
+        </h2>
         <button
           onClick={() => qc.invalidateQueries({ queryKey: ['leaderboard', groupId] })}
           className="p-2 text-zinc-400 hover:text-white transition-colors"
@@ -329,7 +333,7 @@ function LeaderboardTab() {
         </div>
       ) : leaderboard.length === 0 ? (
         <div className="flex flex-col items-center py-16 text-center text-zinc-500 gap-3">
-          <span className="text-5xl">🏆</span>
+          <Trophy size={48} className="text-zinc-650" />
           <p className="font-medium">No members in this league</p>
           <p className="text-sm">Invite friends using your league's invite code!</p>
         </div>
@@ -365,9 +369,9 @@ function PredictionsTab() {
   const myMatches = (matches as Match[]).filter((m: Match) => m.userPrediction !== null);
 
   const sections = [
-    { label: '🔴 Live',     items: myMatches.filter((m: Match) => m.status === 'LIVE') },
-    { label: '⏳ Upcoming', items: myMatches.filter((m: Match) => m.status === 'PENDING') },
-    { label: '✅ Finished', items: myMatches.filter((m: Match) => m.status === 'FINISHED') },
+    { label: 'Live',     items: myMatches.filter((m: Match) => m.status === 'LIVE') },
+    { label: 'Upcoming', items: myMatches.filter((m: Match) => m.status === 'PENDING') },
+    { label: 'Finished', items: myMatches.filter((m: Match) => m.status === 'FINISHED') },
   ].filter(s => s.items.length > 0);
 
   const totalPoints = myMatches
@@ -377,7 +381,10 @@ function PredictionsTab() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black">⭐ My Predictions</h2>
+        <h2 className="text-xl font-black flex items-center gap-2">
+          <Star className="text-amber-400 fill-amber-400/10" size={20} />
+          <span>My Predictions</span>
+        </h2>
         {totalPoints > 0 && (
           <span className="inline-flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/25 text-amber-400 text-sm font-bold px-3 py-1.5 rounded-full shadow-gold-glow/30">
             {totalPoints} pts total
@@ -391,7 +398,7 @@ function PredictionsTab() {
         </div>
       ) : myMatches.length === 0 ? (
         <div className="flex flex-col items-center py-16 text-center text-zinc-500 gap-3">
-          <span className="text-5xl">⭐</span>
+          <Star size={48} className="text-zinc-650" />
           <p className="font-medium">No predictions yet</p>
           <p className="text-sm">Head to the Matches tab to make your first prediction!</p>
         </div>
@@ -423,7 +430,10 @@ function FriendsTab() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black">👥 League Activity</h2>
+        <h2 className="text-xl font-black flex items-center gap-2">
+          <Users className="text-amber-450 fill-amber-450/10" size={20} />
+          <span>League Activity</span>
+        </h2>
         <p className="text-xs text-zinc-500">Scores hidden until kickoff</p>
       </div>
       {isLoading ? (

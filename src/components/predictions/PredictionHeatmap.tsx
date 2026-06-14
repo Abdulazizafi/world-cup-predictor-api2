@@ -157,7 +157,7 @@ export default function PredictionHeatmap({ matches, flat = false }: PredictionH
               {hoveredItem.userPrediction && (
                 <span className="text-[10px] text-zinc-500">
                   Your Prediction: {hoveredItem.userPrediction.predictedScoreA}–{hoveredItem.userPrediction.predictedScoreB}
-                  {hoveredItem.userPrediction.useDoublePoints && ' (⚡ 2x)'}
+                  {hoveredItem.userPrediction.useDoublePoints && ' (2x)'}
                   {hoveredItem.status === 'FINISHED' && ` · Result: ${hoveredItem.scoreA}–${hoveredItem.scoreB}`}
                 </span>
               )}

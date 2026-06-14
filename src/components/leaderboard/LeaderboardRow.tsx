@@ -1,10 +1,9 @@
 'use client';
 // components/leaderboard/LeaderboardRow.tsx
 import { motion } from 'framer-motion';
+import { Trophy } from 'lucide-react';
 import { cn, getInitial } from '@/lib/utils';
 import type { LeaderboardEntry } from '@/types';
-
-const medals: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 interface LeaderboardRowProps {
   entry: LeaderboardEntry;
@@ -33,10 +32,19 @@ export default function LeaderboardRow({ entry, index }: LeaderboardRowProps) {
     >
       {/* Rank */}
       <div className="w-8 text-center shrink-0">
-        {isTop3
-          ? <span className="text-xl">{medals[entry.rank]}</span>
-          : <span className="text-sm font-bold text-zinc-500">#{entry.rank}</span>
-        }
+        {isTop3 ? (
+          <Trophy
+            size={18}
+            className={cn(
+              'mx-auto',
+              entry.rank === 1 ? 'text-amber-400' :
+              entry.rank === 2 ? 'text-zinc-300' :
+              'text-amber-700'
+            )}
+          />
+        ) : (
+          <span className="text-sm font-bold text-zinc-500">#{entry.rank}</span>
+        )}
       </div>
 
       {/* Avatar */}

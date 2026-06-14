@@ -2,7 +2,7 @@
 // components/match/MatchCard.tsx — Individual match prediction card
 import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Clock } from 'lucide-react';
+import { Lock, Clock, Edit2, Zap, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -105,7 +105,7 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
       setIsEditing(false);
       triggerParticles(e);
       toast.success(
-        `⚽ Prediction saved: ${match.teamA} ${a}–${b} ${match.teamB}${useDoublePoints ? ' (⚡ 2x)' : ''}`,
+        `Prediction saved: ${match.teamA} ${a}–${b} ${match.teamB}${useDoublePoints ? ' (2x)' : ''}`,
         { id: `pred-${match.id}` }
       );
     } catch (err: any) {
@@ -368,7 +368,14 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                         : 'bg-zinc-900/30 border-white/5 text-zinc-500'
                     }`}
                   >
-                    {useDoublePoints ? '⚡ 2X Active' : 'Standard'}
+                    {useDoublePoints ? (
+                      <>
+                        <Zap size={11} className="fill-amber-400 text-amber-400" />
+                        <span>2X Active</span>
+                      </>
+                    ) : (
+                      <span>Standard</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -398,7 +405,8 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                   onClick={() => setIsEditing(true)}
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-bold py-3.5 rounded-xl shadow-gold-glow hover:shadow-gold-glow-lg transition-all duration-200 text-sm min-h-[44px]"
                 >
-                  ✏️ Make Prediction
+                  <Edit2 size={14} />
+                  <span>Make Prediction</span>
                 </button>
               )}
 
@@ -446,7 +454,7 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                                 triggerParticles();
                               }
                               toast.success(
-                                `⚽ Double Points ${checked ? 'enabled' : 'disabled'} for ${match.teamA} vs ${match.teamB}`,
+                                `Double Points ${checked ? 'enabled' : 'disabled'} for ${match.teamA} vs ${match.teamB}`,
                                 { id: `pred-${match.id}` }
                               );
                             } catch (err: any) {
@@ -459,7 +467,8 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                           className="rounded border-white/10 bg-zinc-950 text-amber-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer accent-amber-500 disabled:opacity-50"
                         />
                         <span className="text-xs font-bold text-zinc-300 group-hover/toggle:text-white transition-colors flex items-center gap-1">
-                          ⚡ X2
+                          <Zap size={11} className="fill-amber-400 text-amber-500" />
+                          <span>X2</span>
                         </span>
                       </label>
                     </div>
@@ -486,7 +495,7 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
               {isEditing && (
                 <div className="space-y-4">
                   <p className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">
-                    {match.userPrediction ? '✏️ Edit your prediction' : '⚽ Make your prediction'}
+                    {match.userPrediction ? 'Edit your prediction' : 'Make your prediction'}
                   </p>
 
                   <div className="flex items-center justify-between gap-4">
@@ -527,7 +536,8 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                           className="rounded border-white/10 bg-zinc-950 text-amber-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer accent-amber-500"
                         />
                         <span className="text-xs font-bold text-zinc-300 group-hover/toggle:text-white transition-colors flex items-center gap-1">
-                          ⚡ X2
+                          <Zap size={11} className="fill-amber-400 text-amber-500" />
+                          <span>X2</span>
                         </span>
                       </label>
                     </div>
@@ -563,7 +573,7 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                       {saving ? (
                         <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                       ) : (
-                        '💾'
+                        <Save size={13} />
                       )}
                       {saving ? 'Saving...' : 'Save'}
                     </button>
