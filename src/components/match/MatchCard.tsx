@@ -21,6 +21,38 @@ interface MatchCardProps {
 export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardProps) {
   const qc = useQueryClient();
   
+  const [particles, setParticles] = useState<{ id: number; x: number; y: number; size: number; color: string; dx: number; dy: number }[]>([]);
+
+  const triggerParticles = useCallback((e?: React.MouseEvent) => {
+    let startX = 160;
+    let startY = 150;
+    
+    if (e && e.clientX && e.clientY) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      startY = e.clientY - rect.top;
+    }
+
+    const colors = ['#FBBF24', '#F59E0B', '#D97706', '#FFF', '#FCD34D'];
+    const newParticles = Array.from({ length: 24 }).map((_, i) => {
+      const angle = (i * 15 * Math.PI) / 180 + (Math.random() - 0.5) * 0.25;
+      const speed = 2.5 + Math.random() * 4.5;
+      return {
+        id: Math.random() + i,
+        x: startX,
+        y: startY,
+        size: 3 + Math.random() * 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        dx: Math.cos(angle) * speed,
+        dy: Math.sin(angle) * speed,
+      };
+    });
+    setParticles((prev) => [...prev, ...newParticles]);
+    setTimeout(() => {
+      setParticles((prev) => prev.filter((p) => !newParticles.includes(p)));
+    }, 1000);
+  }, []);
+  
   const now = Date.now();
   const matchTimeMs = new Date(match.matchTime).getTime();
   const opensAt = matchTimeMs - 24 * 60 * 60 * 1000;
@@ -59,7 +91,7 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
     }
   }, [match.userPrediction]);
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (e?: React.MouseEvent) => {
     const a = parseInt(scoreA, 10);
     const b = parseInt(scoreB, 10);
     if (isNaN(a) || isNaN(b) || a < 0 || b < 0 || a > 30 || b > 30) {
@@ -71,6 +103,7 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
       await apiSubmitPrediction(match.id, a, b, useDoublePoints);
       await qc.invalidateQueries({ queryKey: ['matches'] });
       setIsEditing(false);
+      triggerParticles(e);
       toast.success(
         `⚽ Prediction saved: ${match.teamA} ${a}–${b} ${match.teamB}${useDoublePoints ? ' (⚡ 2x)' : ''}`,
         { id: `pred-${match.id}` }
@@ -83,13 +116,101 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
     }
   }, [scoreA, scoreB, useDoublePoints, match.id, match.teamA, match.teamB, qc]);
 
+  const isLive = match.status === 'LIVE';
+  const isFinished = match.status === 'FINISHED';
+
+  const cardVariants: any = {
+    initial: { opacity: 0, y: 20 },
+    animate: isLive
+      ? {
+          opacity: 1,
+          y: 0,
+          borderColor: [
+            'rgba(239, 68, 68, 0.25)',
+            'rgba(239, 68, 68, 0.55)',
+            'rgba(239, 68, 68, 0.25)',
+          ],
+          boxShadow: [
+            '0 0 12px rgba(239, 68, 68, 0.15)',
+            '0 0 24px rgba(239, 68, 68, 0.35)',
+            '0 0 12px rgba(239, 68, 68, 0.15)',
+          ],
+        }
+      : isFinished
+      ? {
+          opacity: 1,
+          y: 0,
+          borderColor: 'rgba(16, 185, 129, 0.25)',
+          boxShadow: '0 0 16px rgba(16, 185, 129, 0.1)',
+        }
+      : {
+          opacity: 1,
+          y: 0,
+          borderColor: 'rgba(245, 158, 11, 0.08)',
+          boxShadow: '0 0 15px rgba(245, 158, 11, 0.03)',
+        },
+  };
+
+  const cardTransition: any = isLive
+    ? {
+        borderColor: { repeat: Infinity, duration: 2.2, ease: 'easeInOut' },
+        boxShadow: { repeat: Infinity, duration: 2.2, ease: 'easeInOut' },
+        opacity: { duration: 0.4, delay: index * 0.06 },
+        y: { duration: 0.4, delay: index * 0.06 },
+      }
+    : {
+        duration: 0.4,
+        delay: index * 0.06,
+        ease: [0.22, 1, 0.36, 1],
+      };
+
+  const cardHover: any = isLive
+    ? {}
+    : isFinished
+    ? {
+        borderColor: 'rgba(16, 185, 129, 0.45)',
+        boxShadow: '0 0 20px rgba(16, 185, 129, 0.18)',
+      }
+    : {
+        borderColor: 'rgba(245, 158, 11, 0.3)',
+        boxShadow: '0 0 20px rgba(245, 158, 11, 0.12)',
+      };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
-      className="glass rounded-2xl overflow-hidden group hover:border-white/15 transition-colors duration-300"
+      variants={cardVariants}
+      initial="initial"
+      animate="animate"
+      whileHover={cardHover}
+      transition={cardTransition}
+      className="glass rounded-2xl overflow-hidden group relative border transition-colors duration-300"
     >
+      {/* Particles overlay */}
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          initial={{ x: p.x, y: p.y, opacity: 1, scale: 1 }}
+          animate={{
+            x: p.x + p.dx * 12,
+            y: p.y + p.dy * 12,
+            opacity: 0,
+            scale: 0.2,
+            rotate: Math.random() * 360,
+          }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: p.size,
+            height: p.size,
+            borderRadius: '50%',
+            backgroundColor: p.color,
+            pointerEvents: 'none',
+            zIndex: 50,
+          }}
+        />
+      ))}
       {/* Top accent line */}
       <div
         className={`h-0.5 w-full ${
@@ -321,6 +442,9 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                               const b = parseInt(scoreB, 10);
                               await apiSubmitPrediction(match.id, a, b, checked);
                               await qc.invalidateQueries({ queryKey: ['matches'] });
+                              if (checked) {
+                                triggerParticles();
+                              }
                               toast.success(
                                 `⚽ Double Points ${checked ? 'enabled' : 'disabled'} for ${match.teamA} vs ${match.teamB}`,
                                 { id: `pred-${match.id}` }
@@ -396,6 +520,9 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                               return;
                             }
                             setUseDoublePoints(checked);
+                            if (checked) {
+                              triggerParticles();
+                            }
                           }}
                           className="rounded border-white/10 bg-zinc-950 text-amber-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer accent-amber-500"
                         />

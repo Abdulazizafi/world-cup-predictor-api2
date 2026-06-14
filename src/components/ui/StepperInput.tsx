@@ -1,5 +1,7 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { Minus, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface StepperInputProps {
   value: string;
@@ -16,6 +18,16 @@ export default function StepperInput({
   min = 0,
   max = 30,
 }: StepperInputProps) {
+  const [prevValue, setPrevValue] = useState(value);
+
+  useEffect(() => {
+    setPrevValue(value);
+  }, [value]);
+
+  const currentNum = parseInt(value, 10) || 0;
+  const prevNum = parseInt(prevValue, 10) || 0;
+  const isUp = currentNum >= prevNum;
+
   const handleDecrement = () => {
     if (disabled) return;
     const current = parseInt(value, 10);
@@ -59,16 +71,46 @@ export default function StepperInput({
         <Minus size={14} />
       </button>
       
-      <input
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={value}
-        onChange={handleInputChange}
-        disabled={disabled}
-        placeholder="0"
-        className="flex-1 w-full bg-transparent border-none text-center text-lg font-black text-white focus:outline-none focus:ring-0 p-0"
-      />
+      {disabled ? (
+        <div className="flex-1 w-full h-10 flex items-center justify-center text-lg font-black text-white overflow-hidden relative">
+          <div className="flex items-center justify-center font-black">
+            {value.split('').map((char, index) => (
+              <div
+                key={index}
+                className="relative h-6 overflow-hidden flex items-center justify-center font-black"
+                style={{ width: '0.65em' }}
+              >
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    key={char}
+                    initial={{ y: isUp ? 24 : -24, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: isUp ? -24 : 24, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+                    className="absolute font-black select-none text-white text-lg"
+                  >
+                    {char}
+                  </motion.span>
+                </AnimatePresence>
+              </div>
+            ))}
+            {value === '' && (
+              <span className="text-zinc-650 font-black text-lg select-none">0</span>
+            )}
+          </div>
+        </div>
+      ) : (
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={value}
+          onChange={handleInputChange}
+          disabled={disabled}
+          placeholder="0"
+          className="flex-1 w-full bg-transparent border-none text-center text-lg font-black text-white focus:outline-none focus:ring-0 p-0"
+        />
+      )}
 
       <button
         type="button"

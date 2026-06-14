@@ -16,9 +16,14 @@ export default function LeaderboardRow({ entry, index }: LeaderboardRowProps) {
 
   return (
     <motion.div
+      layout="position"
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.35, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        layout: { type: 'spring', stiffness: 300, damping: 30 },
+        opacity: { duration: 0.35, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] },
+        x: { duration: 0.35, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }
+      }}
       className={cn(
         'flex items-center gap-3 px-4 py-3 rounded-xl transition-colors',
         entry.isCurrentUser

@@ -12,6 +12,7 @@ import MatchCard from '@/components/match/MatchCard';
 import Podium from '@/components/leaderboard/Podium';
 import LeaderboardRow from '@/components/leaderboard/LeaderboardRow';
 import PredictionCard from '@/components/predictions/PredictionCard';
+import PredictionHeatmap from '@/components/predictions/PredictionHeatmap';
 import ActivityFeed from '@/components/friends/ActivityFeed';
 import { MatchCardSkeleton, LeaderboardRowSkeleton } from '@/components/ui/LoadingSkeleton';
 import { useAppStore } from '@/lib/store/useAppStore';
@@ -154,6 +155,9 @@ function MatchesTab() {
           </div>
         </div>
       </div>
+
+      {/* Prediction Heatmap Streak Tracker */}
+      <PredictionHeatmap matches={matches} />
 
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">Matches</h2>
