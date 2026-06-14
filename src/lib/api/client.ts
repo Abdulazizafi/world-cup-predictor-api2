@@ -82,3 +82,15 @@ export const apiGetActivity = async (groupId: string): Promise<ActivityEntry[]> 
   const res = await http.get(`/groups/${groupId}/activity`);
   return res.data.data.activity;
 };
+
+// ── Admin Override ──────────────────────────────────────────────
+export const apiUpdateMatchScore = async (
+  matchId: string,
+  scoreA: number | null,
+  scoreB: number | null,
+  status: string,
+): Promise<void> => {
+  if (USE_MOCK) { await delay(500); return; }
+  await http.put(`/matches/${matchId}/score`, { scoreA, scoreB, status });
+};
+
