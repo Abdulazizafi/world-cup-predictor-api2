@@ -32,6 +32,7 @@ function MatchesTab() {
   const [filter, setFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UPCOMING' | 'LIVE' | 'FINISHED'>('ALL');
   const [showStageFilter, setShowStageFilter] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   const stages = ['All', ...Array.from(new Set(matches.map((m: Match) => m.stage)))];
   const filtered = filter === 'All' ? matches : matches.filter((m: Match) => m.stage === filter);
@@ -102,9 +103,18 @@ function MatchesTab() {
       <div className="glass rounded-2xl p-5 border border-white/5 relative overflow-hidden">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-white text-sm tracking-wide">Your Progress</h3>
-          <span className="text-xs text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center gap-0.5">
-            View Stats <span className="text-[10px]">&gt;</span>
-          </span>
+          <button
+            onClick={() => setShowStats(!showStats)}
+            className="text-xs text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center gap-1 focus:outline-none font-bold"
+          >
+            {showStats ? 'Hide Stats' : 'View Stats'}{' '}
+            <span
+              className="inline-block text-[10px] transition-transform duration-200"
+              style={{ transform: showStats ? 'rotate(90deg)' : 'rotate(0deg)' }}
+            >
+              &gt;
+            </span>
+          </button>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -154,10 +164,21 @@ function MatchesTab() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Prediction Heatmap Streak Tracker */}
-      <PredictionHeatmap matches={matches} />
+        <AnimatePresence>
+          {showStats && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden border-t border-white/5 mt-5 pt-5"
+            >
+              <PredictionHeatmap matches={matches} flat={true} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black">Matches</h2>

@@ -6,9 +6,10 @@ import type { Match } from '@/types';
 
 interface PredictionHeatmapProps {
   matches: Match[];
+  flat?: boolean;
 }
 
-export default function PredictionHeatmap({ matches }: PredictionHeatmapProps) {
+export default function PredictionHeatmap({ matches, flat = false }: PredictionHeatmapProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   // Sort matches chronologically
@@ -80,7 +81,7 @@ export default function PredictionHeatmap({ matches }: PredictionHeatmapProps) {
   const hoveredDetails = hoveredIndex !== null ? getCellDetails(hoveredItem, hoveredIndex) : null;
 
   return (
-    <div className="glass rounded-2xl p-5 border border-white/5 space-y-4">
+    <div className={flat ? 'space-y-4' : 'glass rounded-2xl p-5 border border-white/5 space-y-4'}>
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-bold text-white text-sm tracking-wide flex items-center gap-1.5">
