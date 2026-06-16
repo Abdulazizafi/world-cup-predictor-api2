@@ -73,7 +73,9 @@ export default function LeagueInsights({ groupId }: { groupId: string }) {
                   <p className="text-base font-black text-white mt-0.5">
                     {insights.maxPointsEarned} <span className="text-xs text-zinc-500 font-bold">pts</span>
                   </p>
-                  <p className="text-[9px] text-zinc-500 font-medium">Single Prediction</p>
+                  <p className="text-[9px] text-zinc-500 font-medium truncate max-w-[145px]">
+                    {insights.maxPointsUsername ? `by ${insights.maxPointsUsername}` : 'Single Prediction'}
+                  </p>
                 </div>
               </div>
 

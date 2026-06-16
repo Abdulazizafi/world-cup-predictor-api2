@@ -105,11 +105,17 @@ export const apiGetGroupInsights = async (
 ): Promise<{
   averagePoints: number;
   maxPointsEarned: number;
+  maxPointsUsername: string | null;
   upsetMatch: { teamA: string; teamB: string; averagePoints: number } | null;
 }> => {
   if (USE_MOCK) {
     await delay();
-    return { averagePoints: 120, maxPointsEarned: 200, upsetMatch: { teamA: 'Argentina', teamB: 'Saudi Arabia', averagePoints: 1.2 } };
+    return {
+      averagePoints: 120,
+      maxPointsEarned: 200,
+      maxPointsUsername: 'Messi',
+      upsetMatch: { teamA: 'Argentina', teamB: 'Saudi Arabia', averagePoints: 1.2 }
+    };
   }
   const res = await http.get(`/groups/${groupId}/insights`);
   return res.data.data.insights;
