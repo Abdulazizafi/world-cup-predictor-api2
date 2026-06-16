@@ -12,6 +12,7 @@ import MatchCard from '@/components/match/MatchCard';
 import Podium from '@/components/leaderboard/Podium';
 import LeaderboardRow from '@/components/leaderboard/LeaderboardRow';
 import LeagueInsights from '@/components/leaderboard/LeagueInsights';
+import LeaderboardLegend from '@/components/leaderboard/LeaderboardLegend';
 import CompareModal from '@/components/leaderboard/CompareModal';
 import PredictionCard from '@/components/predictions/PredictionCard';
 import PredictionHeatmap from '@/components/predictions/PredictionHeatmap';
@@ -333,6 +334,9 @@ function LeaderboardTab() {
 
       {/* League-wide insights */}
       <LeagueInsights groupId={groupId} />
+
+      {/* Leaderboard badge explanations */}
+      <LeaderboardLegend />
 
       {isLoading ? (
         <div className="space-y-2">
