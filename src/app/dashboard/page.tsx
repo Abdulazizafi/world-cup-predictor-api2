@@ -420,28 +420,48 @@ function PredictionsTab() {
 function FriendsTab() {
   const { user } = useAppStore();
   const groupId = user?.groupId ?? 'g1';
+  const [limit, setLimit] = useState(20);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
 
-  const { data: activity = [], isLoading } = useQuery({
-    queryKey: ['activity', groupId],
-    queryFn: () => apiGetActivity(groupId),
+  const { data: activity = [], isLoading, isFetching } = useQuery({
+    queryKey: ['activity', groupId, limit],
+    queryFn: () => apiGetActivity(groupId, limit),
     refetchInterval: 30_000,
   });
+
+  const handleLoadMore = () => {
+    setIsFetchingMore(true);
+    setLimit((prev) => prev + 20);
+  };
+
+  useEffect(() => {
+    if (!isFetching) {
+      setIsFetchingMore(false);
+    }
+  }, [isFetching]);
+
+  const hasMore = activity.length >= limit;
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black flex items-center gap-2">
-          <Users className="text-amber-450 fill-amber-450/10" size={20} />
+          <Users className="text-amber-500 fill-amber-550/10" size={20} />
           <span>League Activity</span>
         </h2>
         <p className="text-xs text-zinc-500">Scores hidden until kickoff</p>
       </div>
-      {isLoading ? (
+      {isLoading && activity.length === 0 ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => <LeaderboardRowSkeleton key={i} />)}
         </div>
       ) : (
-        <ActivityFeed entries={activity} />
+        <ActivityFeed
+          entries={activity}
+          hasMore={hasMore}
+          onLoadMore={handleLoadMore}
+          isLoadingMore={isFetchingMore}
+        />
       )}
     </div>
   );

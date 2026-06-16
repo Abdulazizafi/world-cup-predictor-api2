@@ -54,6 +54,10 @@ export interface ActivityEntry {
   status: MatchStatus;
   predictedScoreA: number | null;   // null = hidden pre-kickoff
   predictedScoreB: number | null;
+  pointsEarned?: number;
+  useDoublePoints?: boolean;
+  scoreA?: number | null;
+  scoreB?: number | null;
   createdAt: string;
 }
 
