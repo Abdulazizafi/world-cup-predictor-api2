@@ -83,5 +83,37 @@ export const apiGetActivity = async (groupId: string, limit?: number, offset?: n
   return res.data.data.activity;
 };
 
+export const apiComparePredictions = async (
+  groupId: string,
+  userId: string,
+): Promise<
+  Array<{
+    matchId: string;
+    predictedScoreA: number;
+    predictedScoreB: number;
+    pointsEarned: number;
+    useDoublePoints: boolean;
+  }>
+> => {
+  if (USE_MOCK) { await delay(); return []; }
+  const res = await http.get(`/groups/${groupId}/compare/${userId}`);
+  return res.data.data.predictions;
+};
+
+export const apiGetGroupInsights = async (
+  groupId: string,
+): Promise<{
+  averagePoints: number;
+  maxPointsEarned: number;
+  upsetMatch: { teamA: string; teamB: string; averagePoints: number } | null;
+}> => {
+  if (USE_MOCK) {
+    await delay();
+    return { averagePoints: 120, maxPointsEarned: 200, upsetMatch: { teamA: 'Argentina', teamB: 'Saudi Arabia', averagePoints: 1.2 } };
+  }
+  const res = await http.get(`/groups/${groupId}/insights`);
+  return res.data.data.insights;
+};
+
 
 

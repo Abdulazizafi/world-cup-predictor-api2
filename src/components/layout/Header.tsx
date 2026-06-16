@@ -1,7 +1,7 @@
 'use client';
 // components/layout/Header.tsx — Dashboard top header with WC2026 branding
 import { motion } from 'framer-motion';
-import { Star, Users, LogOut } from 'lucide-react';
+import { Star, Users, LogOut, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
@@ -29,7 +29,7 @@ export default function Header() {
       await apiLogout();
       setUser(null);
       router.push('/login');
-      toast.success('See you next match! 👋');
+      toast.success('See you next match!');
     } catch {
       toast.error('Logout failed');
     }
@@ -64,7 +64,7 @@ export default function Header() {
         <div className="flex items-center gap-2 flex-1 justify-center flex-wrap">
           {myEntry && (
             <div className="glass rounded-xl px-3 py-1.5 flex items-center gap-2">
-              <Star size={12} className="text-amber-400" />
+              <Trophy size={12} className="text-amber-400 fill-amber-400/10" />
               <span className="text-sm font-black text-amber-400">#{myEntry.rank}</span>
               <span className="w-px h-3 bg-white/10" />
               <span className="text-sm font-black text-white">{myEntry.totalPoints}</span>

@@ -43,6 +43,11 @@ export interface LeaderboardEntry {
   username: string;
   totalPoints: number;
   isCurrentUser: boolean;
+  trend?: 'UP' | 'DOWN' | 'SAME';
+  exactCount?: number;
+  outcomeCount?: number;
+  incorrectCount?: number;
+  doubleUsed?: number;
 }
 
 export interface ActivityEntry {

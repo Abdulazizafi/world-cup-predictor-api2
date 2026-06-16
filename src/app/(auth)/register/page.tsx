@@ -43,7 +43,7 @@ export default function RegisterPage() {
     try {
       const user = await apiRegister(username.trim(), password);
       setUser(user);
-      toast.success('Account created! Welcome to WC Predictor 2026 🎉');
+      toast.success('Account created! Welcome to WC Predictor 2026');
       router.push('/group-setup');
     } catch (err: unknown) {
       setError((err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Registration failed.');
@@ -159,8 +159,8 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-3 mt-6 text-zinc-500 text-xs">
-          <span>🇺🇸 USA</span><span>·</span><span>🇨🇦 Canada</span><span>·</span><span>🇲🇽 Mexico</span>
+        <div className="flex items-center justify-center gap-3 mt-6 text-zinc-500 text-[10px] font-black tracking-widest uppercase">
+          <span>USA</span><span>·</span><span>Canada</span><span>·</span><span>Mexico</span>
         </div>
       </motion.div>
     </div>

@@ -10,7 +10,7 @@ const tabs: { id: DashTab; label: string; icon: React.ElementType }[] = [
   { id: 'matches',     label: 'Matches',     icon: Calendar },
   { id: 'leaderboard', label: 'Standings',   icon: Trophy },
   { id: 'predictions', label: 'My Picks',    icon: Star },
-  { id: 'friends',     label: 'Friends',     icon: Users },
+  { id: 'friends',     label: 'Activity',     icon: Users },
 ];
 
 export default function BottomNav() {

@@ -33,7 +33,7 @@ export default function LoginPage() {
     try {
       const user = await apiLogin(username.trim(), password);
       setUser(user);
-      toast.success(`Welcome back, ${user.username}! ⚽`);
+      toast.success(`Welcome back, ${user.username}!`);
       router.push(user.groupId ? '/dashboard' : '/group-setup');
     } catch {
       setError('Invalid username or password.');
@@ -167,8 +167,8 @@ export default function LoginPage() {
         </div>
 
         {/* Host nations */}
-        <div className="flex items-center justify-center gap-3 mt-6 text-zinc-500 text-xs">
-          <span>🇺🇸 USA</span><span>·</span><span>🇨🇦 Canada</span><span>·</span><span>🇲🇽 Mexico</span>
+        <div className="flex items-center justify-center gap-3 mt-6 text-zinc-500 text-[10px] font-black tracking-widest uppercase">
+          <span>USA</span><span>·</span><span>Canada</span><span>·</span><span>Mexico</span>
         </div>
       </motion.div>
     </div>

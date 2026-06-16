@@ -11,6 +11,8 @@ import TabNav from '@/components/layout/TabNav';
 import MatchCard from '@/components/match/MatchCard';
 import Podium from '@/components/leaderboard/Podium';
 import LeaderboardRow from '@/components/leaderboard/LeaderboardRow';
+import LeagueInsights from '@/components/leaderboard/LeagueInsights';
+import CompareModal from '@/components/leaderboard/CompareModal';
 import PredictionCard from '@/components/predictions/PredictionCard';
 import PredictionHeatmap from '@/components/predictions/PredictionHeatmap';
 import ActivityFeed from '@/components/friends/ActivityFeed';
@@ -302,6 +304,8 @@ function LeaderboardTab() {
   const { user } = useAppStore();
   const groupId = user?.groupId ?? 'g1';
   const qc = useQueryClient();
+  const [compareUserId, setCompareUserId] = useState<string | null>(null);
+  const [compareUsername, setCompareUsername] = useState<string>('');
 
   const { data: leaderboard = [], isLoading } = useQuery({
     queryKey: ['leaderboard', groupId],
@@ -309,7 +313,7 @@ function LeaderboardTab() {
     refetchInterval: 30_000,
   });
 
-  const below3 = leaderboard.filter(e => e.rank > 3);
+  const maxExactCount = leaderboard.length > 0 ? Math.max(...leaderboard.map(e => e.exactCount || 0)) : 0;
 
   return (
     <div className="space-y-5">
@@ -320,12 +324,15 @@ function LeaderboardTab() {
         </h2>
         <button
           onClick={() => qc.invalidateQueries({ queryKey: ['leaderboard', groupId] })}
-          className="p-2 text-zinc-400 hover:text-white transition-colors"
+          className="p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
           title="Refresh"
         >
           <RefreshCw size={14} />
         </button>
       </div>
+
+      {/* League-wide insights */}
+      <LeagueInsights groupId={groupId} />
 
       {isLoading ? (
         <div className="space-y-2">
@@ -350,11 +357,29 @@ function LeaderboardTab() {
           {/* List of members (shows everyone in the league) */}
           <div className="space-y-2">
             {leaderboard.map((entry, i) => (
-              <LeaderboardRow key={entry.userId} entry={entry} index={i} />
+              <LeaderboardRow
+                key={entry.userId}
+                entry={entry}
+                index={i}
+                isGroupSniper={maxExactCount > 0 && entry.exactCount === maxExactCount}
+                onCompare={(id, name) => {
+                  setCompareUserId(id);
+                  setCompareUsername(name);
+                }}
+              />
             ))}
           </div>
         </>
       )}
+
+      {/* Comparison Modal */}
+      <CompareModal
+        isOpen={compareUserId !== null}
+        onClose={() => setCompareUserId(null)}
+        groupId={groupId}
+        friendId={compareUserId || ''}
+        friendName={compareUsername}
+      />
     </div>
   );
 }
