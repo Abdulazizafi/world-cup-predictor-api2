@@ -2,18 +2,17 @@
 // components/leaderboard/LeaderboardRow.tsx
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, ChevronUp, ChevronDown, Minus, Crosshair, Target, Zap, ArrowRightLeft } from 'lucide-react';
+import { Trophy, ChevronUp, ChevronDown, Minus, ArrowRightLeft } from 'lucide-react';
 import { cn, getInitial } from '@/lib/utils';
 import type { LeaderboardEntry } from '@/types';
 
 interface LeaderboardRowProps {
   entry: LeaderboardEntry;
   index: number;
-  isGroupSniper?: boolean;
   onCompare?: (userId: string, username: string) => void;
 }
 
-export default function LeaderboardRow({ entry, index, isGroupSniper, onCompare }: LeaderboardRowProps) {
+export default function LeaderboardRow({ entry, index, onCompare }: LeaderboardRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isTop3 = entry.rank <= 3;
 
@@ -83,7 +82,7 @@ export default function LeaderboardRow({ entry, index, isGroupSniper, onCompare 
           {getInitial(entry.username)}
         </div>
 
-        {/* Username & Achievements */}
+        {/* Username */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className={cn('font-bold truncate text-sm', entry.isCurrentUser ? 'text-amber-400' : 'text-white')}>
@@ -91,26 +90,6 @@ export default function LeaderboardRow({ entry, index, isGroupSniper, onCompare 
             </span>
             {entry.isCurrentUser && (
               <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-black">YOU</span>
-            )}
-            
-            {/* Gamified Achievement Badges */}
-            {isGroupSniper && (
-              <span className="inline-flex items-center gap-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] font-black px-1.5 py-0.5 rounded" title="Sniper: Most exact scores in the league!">
-                <Crosshair size={9} />
-                SNIPER
-              </span>
-            )}
-            {(entry.doubleUsed || 0) === 5 && (
-              <span className="inline-flex items-center gap-0.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[9px] font-black px-1.5 py-0.5 rounded" title="Double Trouble: Used all 5 double points tokens!">
-                <Zap size={9} className="fill-purple-450" />
-                2X MAX
-              </span>
-            )}
-            {(entry.exactCount || 0) > 0 && !isGroupSniper && (
-              <span className="inline-flex items-center gap-0.5 bg-emerald-500/10 text-emerald-455 border border-emerald-500/20 text-[9px] font-black px-1.5 py-0.5 rounded" title="Perfect Pick: Correctly predicted at least one exact score!">
-                <Target size={9} />
-                PERFECT
-              </span>
             )}
           </div>
         </div>

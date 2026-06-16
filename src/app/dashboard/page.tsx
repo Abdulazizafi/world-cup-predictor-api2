@@ -12,7 +12,6 @@ import MatchCard from '@/components/match/MatchCard';
 import Podium from '@/components/leaderboard/Podium';
 import LeaderboardRow from '@/components/leaderboard/LeaderboardRow';
 import LeagueInsights from '@/components/leaderboard/LeagueInsights';
-import LeaderboardLegend from '@/components/leaderboard/LeaderboardLegend';
 import CompareModal from '@/components/leaderboard/CompareModal';
 import PredictionCard from '@/components/predictions/PredictionCard';
 import PredictionHeatmap from '@/components/predictions/PredictionHeatmap';
@@ -314,8 +313,6 @@ function LeaderboardTab() {
     refetchInterval: 30_000,
   });
 
-  const maxExactCount = leaderboard.length > 0 ? Math.max(...leaderboard.map(e => e.exactCount || 0)) : 0;
-
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -334,9 +331,6 @@ function LeaderboardTab() {
 
       {/* League-wide insights */}
       <LeagueInsights groupId={groupId} />
-
-      {/* Leaderboard badge explanations */}
-      <LeaderboardLegend />
 
       {isLoading ? (
         <div className="space-y-2">
@@ -365,7 +359,6 @@ function LeaderboardTab() {
                 key={entry.userId}
                 entry={entry}
                 index={i}
-                isGroupSniper={maxExactCount > 0 && entry.exactCount === maxExactCount}
                 onCompare={(id, name) => {
                   setCompareUserId(id);
                   setCompareUsername(name);
