@@ -18,6 +18,12 @@ export default function RefRoasts({ leaderboard }: RefRoastsProps) {
     const leader = sortedByPoints[0];
     const last = sortedByPoints[sortedByPoints.length - 1];
 
+    const nonLeaders = leaderboard.filter(e => e.userId !== leader?.userId);
+    const getRandomMember = () => {
+      if (nonLeaders.length === 0) return null;
+      return nonLeaders[Math.floor(Math.random() * nonLeaders.length)];
+    };
+
     // 1. Leader Roast
     if (leader) {
       const leaderRoasts = [
@@ -38,7 +44,7 @@ export default function RefRoasts({ leaderboard }: RefRoastsProps) {
       list.push(lastRoasts[Math.floor(Math.random() * lastRoasts.length)]);
     }
 
-    // 3. Most Incorrect Predictions
+    // 3. Most Incorrect Predictions (Harry Maguire Award)
     const mostIncorrect = [...leaderboard].sort((a, b) => (b.incorrectCount ?? 0) - (a.incorrectCount ?? 0))[0];
     if (mostIncorrect && (mostIncorrect.incorrectCount ?? 0) > 0) {
       list.push(`🧱 HARRY MAGUIRE AWARD: ${mostIncorrect.username} has got ${mostIncorrect.incorrectCount} predictions completely wrong. They are officially qualified to teach defending.`);
@@ -56,12 +62,58 @@ export default function RefRoasts({ leaderboard }: RefRoastsProps) {
       list.push(`📉 GRAVITY WATCH: ${faller.username} slipped down the standings. Slipped faster than Steven Gerrard in 2014.`);
     }
 
-    // 6. General Banter
+    // 6. Draw Merchant / Bus Parker
+    const drawMerchant = getRandomMember();
+    if (drawMerchant) {
+      const drawRoasts = [
+        `🚌 BUS PARKER: ${drawMerchant.username} predicted draws for every game. Jose Mourinho called, he wants his 2010 Chelsea tactics back.`,
+        `🤝 PEACEMAKER: ${drawMerchant.username} is out here predicting draws for every single game. Bro just wants everyone to hold hands and share the points.`
+      ];
+      list.push(drawRoasts[Math.floor(Math.random() * drawRoasts.length)]);
+    }
+
+    // 7. The Curse / Reverse Oracle
+    const cursed = getRandomMember();
+    if (cursed) {
+      const curseRoasts = [
+        `🔮 THE CURSE: If you want your team to win, pray that ${cursed.username} predicts they will lose. Their reverse-prediction accuracy is 100%.`,
+        `🚨 EMERGENCY WARNING: ${cursed.username} has predicted France to win today. The French team has reportedly hired a spiritual healer to break the curse.`
+      ];
+      list.push(curseRoasts[Math.floor(Math.random() * curseRoasts.length)]);
+    }
+
+    // 8. Patriot / Kit Picker
+    const patriot = getRandomMember();
+    if (patriot) {
+      const patriotRoasts = [
+        `🇸🇦 DELUSION WATCH: ${patriot.username} predicted Saudi Arabia to beat France 6-0. We love the patriotism, but even Hervé Renard is concerned.`,
+        `🎨 FASHION OVER FOOTBALL: ${patriot.username} is picking match winners based on which kit looks cooler. Truly a high-IQ football analysis.`
+      ];
+      list.push(patriotRoasts[Math.floor(Math.random() * patriotRoasts.length)]);
+    }
+
+    // 9. Ghost / Sleeping Manager
+    const ghost = getRandomMember();
+    if (ghost) {
+      const ghostRoasts = [
+        `🕵️ VACATION WATCH: ${ghost.username} completely forgot to predict this round. Reportedly seen vacationing in Ibiza while their team is forfeiting.`,
+        `💤 GHOST PROTOCOL: ${ghost.username} is officially MIA. Bro fell asleep and is waiting for the 2030 World Cup to start.`
+      ];
+      list.push(ghostRoasts[Math.floor(Math.random() * ghostRoasts.length)]);
+    }
+
+    // 10. Glory Hunter (Climber)
+    const climber = leaderboard.find(e => e.trend === 'UP');
+    if (climber) {
+      list.push(`🧗 GLORY HUNTER: ${climber.username} climbed the standings and is already updating their CV to 'Tactical Genius'. Calm down, Pep.`);
+    }
+
+    // 11. General Banter
     list.push(`⚽ BANTER: Remember, 90% of predictors stop doubling down right before they are about to get a +200 pts exact score prediction.`);
 
-    // Return 2 random roasts from the list
+    // Return 3 random roasts from the list
     const shuffled = list.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 2);
+    return shuffled.slice(0, 3);
   };
 
   useEffect(() => {
