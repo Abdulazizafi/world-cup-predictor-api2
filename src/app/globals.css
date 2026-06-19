@@ -56,12 +56,120 @@ input[type='number'] { -moz-appearance: textfield; }
 }
 
 /* ── WC26 diagonal stripe background ────────────────── */
-.bg-wc-pattern {
-  background-color: #0a0a0a;
+.bg-pattern {
+  background-color: var(--theme-bg-base, #0a0a0a);
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -5%, rgba(193,0,26,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 40% at 90% 90%, rgba(107,63,160,0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 35% 35% at 0% 100%, rgba(0,122,110,0.06) 0%, transparent 50%);
+    radial-gradient(ellipse 80% 50% at 50% -5%, var(--theme-glow-1, rgba(193,0,26,0.12)) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 90% 90%, var(--theme-glow-2, rgba(107,63,160,0.08)) 0%, transparent 50%),
+    radial-gradient(ellipse 35% 35% at 0% 100%, var(--theme-glow-3, rgba(0,122,110,0.06)) 0%, transparent 50%);
+  transition: background-color 0.5s ease;
+}
+
+/* ═══════════════════════════════════════════════════════
+   AMBIENT STADIUM THEMES
+   ═══════════════════════════════════════════════════════ */
+
+/* 1. LUSAIL GOLD (Default Amber Theme) */
+body.theme-lusail-gold, body:not([class*="theme-"]) {
+  --theme-bg-base: #060608;
+  --theme-glow-1: rgba(245, 158, 11, 0.12); /* amber */
+  --theme-glow-2: rgba(107, 63, 160, 0.08); /* purple */
+  --theme-glow-3: rgba(0, 122, 110, 0.06);  /* teal */
+  --theme-accent-glow: rgba(245, 158, 11, 0.25);
+  
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+  --color-amber-450: #f9a825;
+  --color-amber-550: #ef6c00;
+}
+
+/* 2. AL BAYT CRIMSON (Ruby/Maroon Theme) */
+body.theme-al-bayt-crimson {
+  --theme-bg-base: #080405;
+  --theme-glow-1: rgba(193, 0, 26, 0.15); /* crimson red */
+  --theme-glow-2: rgba(139, 0, 0, 0.10);  /* maroon */
+  --theme-glow-3: rgba(74, 44, 110, 0.08);  /* violet */
+  --theme-accent-glow: rgba(193, 0, 26, 0.35);
+  
+  --color-amber-300: #fca5a5; /* red-300 */
+  --color-amber-400: #f87171; /* red-400 */
+  --color-amber-500: #ef4444; /* red-500 */
+  --color-amber-600: #dc2626; /* red-600 */
+  --color-amber-700: #b91c1c; /* red-700 */
+  --color-amber-800: #991b1b; /* red-800 */
+  --color-amber-900: #7f1d1d; /* red-900 */
+  --color-amber-450: #f87171;
+  --color-amber-550: #dc2626;
+}
+
+/* 3. AL JANOUB TEAL (Ocean Marine Theme) */
+body.theme-al-janoub-teal {
+  --theme-bg-base: #030708;
+  --theme-glow-1: rgba(13, 148, 136, 0.16); /* teal */
+  --theme-glow-2: rgba(16, 185, 129, 0.08);  /* mint green */
+  --theme-glow-3: rgba(59, 130, 246, 0.06);  /* blue */
+  --theme-accent-glow: rgba(13, 148, 136, 0.35);
+  
+  --color-amber-300: #5eead4; /* teal-300 */
+  --color-amber-400: #2dd4bf; /* teal-400 */
+  --color-amber-500: #14b8a6; /* teal-500 */
+  --color-amber-600: #0d9488; /* teal-600 */
+  --color-amber-700: #0f766e; /* teal-700 */
+  --color-amber-800: #115e59; /* teal-800 */
+  --color-amber-900: #134e4a; /* teal-900 */
+  --color-amber-450: #2dd4bf;
+  --color-amber-550: #0d9488;
+}
+
+/* 4. LUSAIL NIGHT (Electric Cyan/Blue Theme) */
+body.theme-lusail-night {
+  --theme-bg-base: #03050a;
+  --theme-glow-1: rgba(6, 182, 212, 0.16);  /* cyan */
+  --theme-glow-2: rgba(59, 130, 246, 0.10);  /* blue */
+  --theme-glow-3: rgba(139, 92, 246, 0.08);  /* purple */
+  --theme-accent-glow: rgba(6, 182, 212, 0.35);
+  
+  --color-amber-300: #67e8f9; /* cyan-300 */
+  --color-amber-400: #22d3ee; /* cyan-400 */
+  --color-amber-500: #06b6d4; /* cyan-500 */
+  --color-amber-600: #0891b2; /* cyan-600 */
+  --color-amber-700: #0e7490; /* cyan-700 */
+  --color-amber-800: #155e75; /* cyan-800 */
+  --color-amber-900: #164e63; /* cyan-900 */
+  --color-amber-450: #22d3ee;
+  --color-amber-550: #0891b2;
+}
+
+/* 5. AHMAD SUNSET (Desert Sunset Orange/Purple Theme) */
+body.theme-ahmad-sunset {
+  --theme-bg-base: #070408;
+  --theme-glow-1: rgba(249, 115, 22, 0.16);  /* orange */
+  --theme-glow-2: rgba(139, 92, 246, 0.10);  /* purple */
+  --theme-glow-3: rgba(236, 72, 153, 0.08);  /* pink */
+  --theme-accent-glow: rgba(249, 115, 22, 0.35);
+  
+  --color-amber-300: #fdba74; /* orange-300 */
+  --color-amber-400: #fb923c; /* orange-400 */
+  --color-amber-500: #f97316; /* orange-500 */
+  --color-amber-600: #ea580c; /* orange-600 */
+  --color-amber-700: #c2410c; /* orange-700 */
+  --color-amber-800: #9a3412; /* orange-800 */
+  --color-amber-900: #7c2d12; /* orange-900 */
+  --color-amber-450: #fb923c;
+  --color-amber-550: #ea580c;
+}
+
+/* ── Dynamic shadow glow classes ───────────────────── */
+.shadow-gold-glow {
+  box-shadow: 0 4px 20px var(--theme-accent-glow);
+}
+.shadow-gold-glow-lg {
+  box-shadow: 0 6px 30px var(--theme-accent-glow);
 }
 
 /* ── WC26 Animated arch stripe decoration ───────────── */
@@ -156,3 +264,4 @@ input[type='number'] { -moz-appearance: textfield; }
   border-color: var(--wc-red);
   box-shadow: 0 0 0 3px rgba(193,0,26,0.2);
 }
+

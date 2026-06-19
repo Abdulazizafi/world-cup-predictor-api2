@@ -11,7 +11,6 @@ import TabNav from '@/components/layout/TabNav';
 import MatchCard from '@/components/match/MatchCard';
 import Podium from '@/components/leaderboard/Podium';
 import LeaderboardRow from '@/components/leaderboard/LeaderboardRow';
-import LeagueInsights from '@/components/leaderboard/LeagueInsights';
 import CompareModal from '@/components/leaderboard/CompareModal';
 import PredictionCard from '@/components/predictions/PredictionCard';
 import PredictionHeatmap from '@/components/predictions/PredictionHeatmap';
@@ -329,8 +328,7 @@ function LeaderboardTab() {
         </button>
       </div>
 
-      {/* League-wide insights */}
-      <LeagueInsights groupId={groupId} />
+
 
       {isLoading ? (
         <div className="space-y-2">
