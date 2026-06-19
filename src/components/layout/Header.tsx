@@ -62,11 +62,11 @@ export default function Header() {
   };
 
   const themesList = [
-    { id: 'theme-lusail-gold', name: 'Lusail Gold', colorClass: 'bg-amber-500 border-amber-400' },
-    { id: 'theme-al-bayt-crimson', name: 'Al Bayt Crimson', colorClass: 'bg-red-650 border-red-500' },
-    { id: 'theme-al-janoub-teal', name: 'Al Janoub Teal', colorClass: 'bg-teal-500 border-teal-400' },
-    { id: 'theme-lusail-night', name: 'Lusail Night', colorClass: 'bg-cyan-500 border-cyan-400' },
-    { id: 'theme-ahmad-sunset', name: 'Ahmad Sunset', colorClass: 'bg-orange-500 border-orange-400' },
+    { id: 'theme-lusail-gold', name: 'Seleção Gold', colorClass: 'bg-amber-500 border-amber-400' },
+    { id: 'theme-al-bayt-crimson', name: 'Wembley 66', colorClass: 'bg-red-650 border-red-500' },
+    { id: 'theme-al-janoub-teal', name: 'Owairan 94', colorClass: 'bg-teal-500 border-teal-400' },
+    { id: 'theme-lusail-night', name: 'Maradona 86', colorClass: 'bg-cyan-500 border-cyan-400' },
+    { id: 'theme-ahmad-sunset', name: 'Total Football', colorClass: 'bg-orange-500 border-orange-400' },
   ];
 
   const handleThemeChange = (newTheme: string) => {
