@@ -9,10 +9,11 @@ import type { LeaderboardEntry } from '@/types';
 interface LeaderboardRowProps {
   entry: LeaderboardEntry;
   index: number;
+  isRelegated?: boolean;
   onCompare?: (userId: string, username: string) => void;
 }
 
-export default function LeaderboardRow({ entry, index, onCompare }: LeaderboardRowProps) {
+export default function LeaderboardRow({ entry, index, isRelegated, onCompare }: LeaderboardRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isTop3 = entry.rank <= 3;
 
@@ -30,7 +31,9 @@ export default function LeaderboardRow({ entry, index, onCompare }: LeaderboardR
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
           'flex items-center gap-3 px-4 py-3 rounded-xl transition-colors cursor-pointer select-none',
-          entry.isCurrentUser
+          isRelegated
+            ? 'bg-red-950/10 border border-red-500/30 shadow-red-glow animate-pulse-border'
+            : entry.isCurrentUser
             ? 'bg-amber-500/8 border border-amber-500/25 shadow-gold-glow/20'
             : 'bg-zinc-900/50 border border-white/5 hover:border-white/10',
         )}
@@ -89,7 +92,10 @@ export default function LeaderboardRow({ entry, index, onCompare }: LeaderboardR
               {entry.username}
             </span>
             {entry.isCurrentUser && (
-              <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-black">YOU</span>
+              <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-black shrink-0">YOU</span>
+            )}
+            {isRelegated && (
+              <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full font-black tracking-wider shrink-0 animate-pulse">RELEGATION</span>
             )}
           </div>
         </div>

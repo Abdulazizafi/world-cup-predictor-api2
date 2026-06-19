@@ -265,3 +265,17 @@ body.theme-ahmad-sunset {
   box-shadow: 0 0 0 3px rgba(193,0,26,0.2);
 }
 
+/* ── Relegation Zone Glow ───────────────────────────── */
+.shadow-red-glow {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.25);
+}
+
+.animate-pulse-border {
+  animation: pulse-border-opacity 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border-opacity {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.25); box-shadow: 0 0 10px rgba(239, 68, 68, 0.15); }
+  50% { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 20px rgba(239, 68, 68, 0.35); }
+}
+

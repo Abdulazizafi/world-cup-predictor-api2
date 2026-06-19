@@ -77,9 +77,14 @@ export const apiGetLeaderboard = async (groupId: string): Promise<LeaderboardEnt
   return res.data.data.leaderboard;
 };
 
-export const apiGetActivity = async (groupId: string, limit?: number, offset?: number): Promise<ActivityEntry[]> => {
+export const apiGetActivity = async (
+  groupId: string,
+  limit?: number,
+  offset?: number,
+  userId?: string,
+): Promise<ActivityEntry[]> => {
   if (USE_MOCK) { await delay(); return MOCK_ACTIVITY; }
-  const res = await http.get(`/groups/${groupId}/activity`, { params: { limit, offset } });
+  const res = await http.get(`/groups/${groupId}/activity`, { params: { limit, offset, userId } });
   return res.data.data.activity;
 };
 

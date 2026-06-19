@@ -12,6 +12,7 @@ import MatchCard from '@/components/match/MatchCard';
 import Podium from '@/components/leaderboard/Podium';
 import LeaderboardRow from '@/components/leaderboard/LeaderboardRow';
 import CompareModal from '@/components/leaderboard/CompareModal';
+import RefRoasts from '@/components/leaderboard/RefRoasts';
 import PredictionCard from '@/components/predictions/PredictionCard';
 import PredictionHeatmap from '@/components/predictions/PredictionHeatmap';
 import ActivityFeed from '@/components/friends/ActivityFeed';
@@ -312,6 +313,11 @@ function LeaderboardTab() {
     refetchInterval: 30_000,
   });
 
+  // Relegation calculation: bottom 3 if N >= 4, bottom 1 if N = 2 or 3, else 0
+  const totalMembers = leaderboard.length;
+  const relegationCount = totalMembers >= 4 ? 3 : totalMembers > 1 ? 1 : 0;
+  const relegationThresholdIndex = totalMembers - relegationCount;
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -357,6 +363,7 @@ function LeaderboardTab() {
                 key={entry.userId}
                 entry={entry}
                 index={i}
+                isRelegated={i >= relegationThresholdIndex}
                 onCompare={(id, name) => {
                   setCompareUserId(id);
                   setCompareUsername(name);
@@ -364,6 +371,9 @@ function LeaderboardTab() {
               />
             ))}
           </div>
+
+          {/* Dynamic referee banter roasts */}
+          <RefRoasts leaderboard={leaderboard} />
         </>
       )}
 
@@ -442,10 +452,17 @@ function FriendsTab() {
   const groupId = user?.groupId ?? 'g1';
   const [limit, setLimit] = useState(20);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>('ALL');
+
+  // Fetch leaderboard to get group members list for filtering
+  const { data: leaderboard = [] } = useQuery({
+    queryKey: ['leaderboard', groupId],
+    queryFn: () => apiGetLeaderboard(groupId),
+  });
 
   const { data: activity = [], isLoading, isFetching } = useQuery({
-    queryKey: ['activity', groupId, limit],
-    queryFn: () => apiGetActivity(groupId, limit),
+    queryKey: ['activity', groupId, limit, selectedUserId],
+    queryFn: () => apiGetActivity(groupId, limit, undefined, selectedUserId === 'ALL' ? undefined : selectedUserId),
     refetchInterval: 30_000,
   });
 
@@ -464,12 +481,36 @@ function FriendsTab() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-xl font-black flex items-center gap-2">
-          <Users className="text-amber-500 fill-amber-550/10" size={20} />
+          <Users className="text-amber-550 fill-amber-555/10" size={20} />
           <span>League Activity</span>
         </h2>
-        <p className="text-xs text-zinc-500">Scores hidden until kickoff</p>
+        
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* User selector dropdown */}
+          {leaderboard.length > 0 && (
+            <div className="relative flex items-center gap-2">
+              <span className="text-[11px] text-zinc-550 font-bold uppercase tracking-wider hidden sm:inline">Filter:</span>
+              <select
+                value={selectedUserId}
+                onChange={(e) => {
+                  setSelectedUserId(e.target.value);
+                  setLimit(20); // Reset limit when filter changes
+                }}
+                className="bg-zinc-900/80 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50 cursor-pointer transition-all"
+              >
+                <option value="ALL">All Players</option>
+                {leaderboard.map((m) => (
+                  <option key={m.userId} value={m.userId}>
+                    {m.username}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <p className="text-xs text-zinc-500 hidden md:block">Scores hidden until kickoff</p>
+        </div>
       </div>
       {isLoading && activity.length === 0 ? (
         <div className="space-y-3">
