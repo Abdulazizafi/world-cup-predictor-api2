@@ -8,6 +8,7 @@ import { RefreshCw, Filter, LayoutGrid, Clock, Flag, SlidersHorizontal, Calendar
 import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
 import TabNav from '@/components/layout/TabNav';
+import { toast } from 'react-hot-toast';
 import MatchCard from '@/components/match/MatchCard';
 import Podium from '@/components/leaderboard/Podium';
 import LeaderboardRow from '@/components/leaderboard/LeaderboardRow';
@@ -19,7 +20,7 @@ import ActivityFeed from '@/components/friends/ActivityFeed';
 import { MatchCardSkeleton, LeaderboardRowSkeleton } from '@/components/ui/LoadingSkeleton';
 import { useAppStore } from '@/lib/store/useAppStore';
 import {
-  apiGetMatches, apiGetLeaderboard, apiGetActivity,
+  apiGetMatches, apiGetLeaderboard, apiGetActivity, apiGetActiveDecree, apiIssueDecree, apiSwearAllegiance
 } from '@/lib/api/client';
 import type { Match, DashTab } from '@/types';
 
@@ -313,6 +314,65 @@ function LeaderboardTab() {
     refetchInterval: 30_000,
   });
 
+  const { data: activeDecree, refetch: refetchDecree } = useQuery({
+    queryKey: ['activeDecree', groupId],
+    queryFn: () => apiGetActiveDecree(groupId),
+  });
+
+  const DECREE_OPTIONS = {
+    TRANSFER_BAN: { label: '🚫 Transfer Ban (Block Double Points)', value: 'TRANSFER_BAN' },
+    COMMUNITY_SERVICE: { label: '🧹 Community Service (Lock Last Place Theme)', value: 'COMMUNITY_SERVICE' },
+    ROYAL_PARDON: { label: '🎁 Royal Pardon (+5 points to all)', value: 'ROYAL_PARDON' },
+    LOYALTY_OATH: { label: '📜 The Loyalty Oath (Force apology comment)', value: 'LOYALTY_OATH' },
+    CLOWN_LOCK: { label: '🤡 Clown Theme Lock (Lock target to clown theme)', value: 'CLOWN_LOCK' },
+    ROYAL_SPY: { label: '👀 Royal Spy (Spy on target predictions)', value: 'ROYAL_SPY' }
+  };
+
+  const [decreeType, setDecreeType] = useState<string>('NONE');
+  const [decreeTarget, setDecreeTarget] = useState<string>('');
+  const [customOathText, setCustomOathText] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isSheikh = leaderboard[0]?.userId === user?.id;
+  const nonLeaders = leaderboard.filter(m => m.userId !== user?.id);
+  const firstTarget = nonLeaders[0]?.userId || '';
+
+  useEffect(() => {
+    if (!decreeTarget && firstTarget) {
+      setDecreeTarget(firstTarget);
+    }
+  }, [leaderboard, firstTarget, decreeTarget]);
+
+  // Sync state if a decree is already active
+  useEffect(() => {
+    if (activeDecree) {
+      setDecreeType(activeDecree.activeDecreeType || 'NONE');
+      setDecreeTarget(activeDecree.activeDecreeTargetId || firstTarget);
+      setCustomOathText(activeDecree.activeDecreeComment || '');
+    }
+  }, [activeDecree, firstTarget]);
+
+  const handleIssueDecree = async () => {
+    setIsSubmitting(true);
+    try {
+      const needTarget = ['TRANSFER_BAN', 'COMMUNITY_SERVICE', 'LOYALTY_OATH', 'CLOWN_LOCK', 'ROYAL_SPY'].includes(decreeType);
+      await apiIssueDecree(
+        groupId,
+        decreeType,
+        needTarget ? decreeTarget : undefined,
+        decreeType === 'LOYALTY_OATH' ? customOathText : undefined
+      );
+      toast.success('Royal Decree issued successfully!');
+      qc.invalidateQueries({ queryKey: ['leaderboard', groupId] });
+      qc.invalidateQueries({ queryKey: ['activeDecree', groupId] });
+      refetchDecree();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to issue decree');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Relegation calculation: bottom 3 if N >= 4, bottom 1 if N = 2 or 3, else 0
   const totalMembers = leaderboard.length;
   const relegationCount = totalMembers >= 4 ? 3 : totalMembers > 1 ? 1 : 0;
@@ -326,15 +386,16 @@ function LeaderboardTab() {
           <span>{user?.groupName ?? 'Leaderboard'}</span>
         </h2>
         <button
-          onClick={() => qc.invalidateQueries({ queryKey: ['leaderboard', groupId] })}
+          onClick={() => {
+            qc.invalidateQueries({ queryKey: ['leaderboard', groupId] });
+            qc.invalidateQueries({ queryKey: ['activeDecree', groupId] });
+          }}
           className="p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
           title="Refresh"
         >
           <RefreshCw size={14} />
         </button>
       </div>
-
-
 
       {isLoading ? (
         <div className="space-y-2">
@@ -348,6 +409,19 @@ function LeaderboardTab() {
         </div>
       ) : (
         <>
+          {/* Round Sheikh announcement card for non-Sheikhs */}
+          {!isSheikh && leaderboard[0] && (
+            <div className="glass rounded-2xl p-4 border border-amber-500/20 bg-amber-500/5 relative overflow-hidden shadow-gold-glow/5 mb-4 flex items-center gap-3 animate-fade-in">
+              <span className="text-xl">👑</span>
+              <div>
+                <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Sheikh of the Round</p>
+                <p className="text-sm font-semibold text-white mt-0.5">
+                  <span className="text-amber-400 font-black">{leaderboard[0].username}</span> is the Sheikh of the Round! They hold absolute power to issue decrees.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Podium for top 3 (only shown if there are at least 3 players) */}
           {leaderboard.length >= 3 && (
             <div className="glass rounded-2xl overflow-hidden">
@@ -364,6 +438,7 @@ function LeaderboardTab() {
                 entry={entry}
                 index={i}
                 isRelegated={i >= relegationThresholdIndex}
+                isCompareBlocked={activeDecree?.activeDecreeType === 'ROYAL_SPY' && activeDecree?.activeDecreeTargetId === user?.id}
                 onCompare={(id, name) => {
                   setCompareUserId(id);
                   setCompareUsername(name);
@@ -374,6 +449,82 @@ function LeaderboardTab() {
 
           {/* Dynamic referee banter roasts */}
           <RefRoasts leaderboard={leaderboard} />
+
+          {/* Sheikh Decree Console */}
+          {isSheikh && (
+            <div className="glass rounded-2xl p-5 border border-amber-500/10 bg-amber-500/3 relative overflow-hidden shadow-sm mt-4">
+              <div className="flex items-center gap-2 text-amber-400 mb-3.5">
+                <span className="text-lg">👑</span>
+                <h3 className="font-bold text-xs uppercase tracking-wider">Sheikh of the Round's Decree Console</h3>
+              </div>
+              <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
+                As the Sheikh of the Round (the leader for this round), you hold the power to issue one Royal Decree to change the rules of the game. Your active decree is pinned to the activity feed for all players.
+              </p>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider">Select Decree</label>
+                    <select
+                      value={decreeType}
+                      onChange={(e) => setDecreeType(e.target.value)}
+                      className="bg-zinc-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-550/50 cursor-pointer"
+                    >
+                      <option value="NONE">None (Clear Decrees)</option>
+                      {(activeDecree?.availableDecrees || ['TRANSFER_BAN', 'COMMUNITY_SERVICE', 'ROYAL_PARDON']).map((type) => {
+                        const opt = DECREE_OPTIONS[type as keyof typeof DECREE_OPTIONS];
+                        if (!opt) return null;
+                        return (
+                          <option key={type} value={type}>
+                            {opt.label}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  {['TRANSFER_BAN', 'CLOWN_LOCK', 'ROYAL_SPY', 'LOYALTY_OATH'].includes(decreeType) && (
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider">Select Target Player</label>
+                      <select
+                        value={decreeTarget}
+                        onChange={(e) => setDecreeTarget(e.target.value)}
+                        className="bg-zinc-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-550/50 cursor-pointer"
+                      >
+                        {nonLeaders.map((m) => (
+                          <option key={m.userId} value={m.userId}>
+                            {m.username}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {decreeType === 'LOYALTY_OATH' && (
+                    <div className="flex flex-col gap-2 col-span-1 sm:col-span-2 mt-2">
+                      <label className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider">Statement to Sign (Forced Apology Comment)</label>
+                      <textarea
+                        value={customOathText}
+                        onChange={(e) => setCustomOathText(e.target.value)}
+                        placeholder={`e.g., I apologize to Sheikh ${user?.username} for my terrible football knowledge.`}
+                        className="bg-zinc-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-650 focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/10 transition-all resize-none h-20"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={handleIssueDecree}
+                    disabled={isSubmitting}
+                    className="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500/50 text-black text-xs font-black uppercase tracking-wider px-5 py-3 rounded-xl transition-all shadow-gold-glow flex items-center gap-1.5 cursor-pointer"
+                  >
+                    {isSubmitting ? 'Issuing...' : 'Issue Royal Decree'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -466,6 +617,12 @@ function FriendsTab() {
     refetchInterval: 30_000,
   });
 
+  const { data: activeDecree } = useQuery({
+    queryKey: ['activeDecree', groupId],
+    queryFn: () => apiGetActiveDecree(groupId),
+    refetchInterval: 30_000,
+  });
+
   const handleLoadMore = () => {
     setIsFetchingMore(true);
     setLimit((prev) => prev + 20);
@@ -509,9 +666,41 @@ function FriendsTab() {
               </select>
             </div>
           )}
-          <p className="text-xs text-zinc-500 hidden md:block">Scores hidden until kickoff</p>
+          <p className="text-xs text-zinc-550 hidden md:block">Scores hidden until kickoff</p>
         </div>
       </div>
+
+      {/* Pinned Decree Banner */}
+      {activeDecree && activeDecree.activeDecreeType && (
+        <div className="glass rounded-2xl p-4 border border-amber-500/20 bg-amber-500/5 relative overflow-hidden shadow-gold-glow/5 animate-fade-in flex items-start gap-3">
+          <span className="text-xl shrink-0 mt-0.5">👑</span>
+          <div className="flex-1">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-amber-400 mb-0.5">ROYAL DECREE IN EFFECT</h4>
+            <p className="text-sm text-zinc-200 leading-relaxed font-semibold">
+              {activeDecree.activeDecreeType === 'TRANSFER_BAN' && (
+                <>Sheikh <span className="text-amber-400">{activeDecree.activeDecreeByName}</span> has banned <span className="text-amber-400">{activeDecree.activeDecreeTargetName}</span> from using Double Points this round! 🚫</>
+              )}
+              {activeDecree.activeDecreeType === 'GREEN_FALCONS' && (
+                <>Sheikh <span className="text-amber-400">{activeDecree.activeDecreeByName}</span> has declared the Green Falcons Subsidy! Everyone gets +10 points if they predict a Saudi win. 🇸🇦</>
+              )}
+              {activeDecree.activeDecreeType === 'COMMUNITY_SERVICE' && (
+                <>Sheikh <span className="text-amber-400">{activeDecree.activeDecreeByName}</span> has sentenced <span className="text-amber-400">{activeDecree.activeDecreeTargetName}</span> to Community Service! Last place layout lock is active. 🧹</>
+              )}
+              {activeDecree.activeDecreeType === 'ROYAL_PARDON' && (
+                <>Sheikh <span className="text-amber-400">{activeDecree.activeDecreeByName}</span> has granted <span className="text-amber-400">{activeDecree.activeDecreeTargetName}</span> a Royal Pardon (+5 points). 🎁</>
+              )}
+              {activeDecree.activeDecreeType === 'LOYALTY_OATH' && (
+                activeDecree.activeDecreeSigned ? (
+                  <>📜 <span className="text-amber-400 font-black">{activeDecree.activeDecreeTargetName}</span> has sworn allegiance to Sheikh <span className="text-amber-400">{activeDecree.activeDecreeByName}</span>! They commented: <span className="italic text-zinc-100">"{activeDecree.activeDecreeComment}"</span></>
+                ) : (
+                  <>Sheikh <span className="text-amber-400">{activeDecree.activeDecreeByName}</span> has ordered <span className="text-amber-400">{activeDecree.activeDecreeTargetName}</span> to swear the Loyalty Oath! Awaiting signature... 📜</>
+                )
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
       {isLoading && activity.length === 0 ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => <LeaderboardRowSkeleton key={i} />)}
@@ -551,6 +740,70 @@ export default function DashboardPage() {
   const [prevTab, setPrevTab] = useState<DashTab>(activeTab);
   const [direction, setDirection] = useState(0);
 
+  const { data: leaderboard = [] } = useQuery({
+    queryKey: ['leaderboard', user?.groupId],
+    queryFn: () => apiGetLeaderboard(user?.groupId || ''),
+    enabled: !!user?.groupId,
+  });
+
+  const { data: activeDecree } = useQuery({
+    queryKey: ['activeDecree', user?.groupId],
+    queryFn: () => apiGetActiveDecree(user?.groupId || ''),
+    enabled: !!user?.groupId,
+  });
+
+  const isLoyaltyOathTarget =
+    activeDecree?.activeDecreeType === 'LOYALTY_OATH' &&
+    activeDecree?.activeDecreeTargetId === user?.id &&
+    !activeDecree?.activeDecreeSigned;
+
+  const [apologyComment, setApologyComment] = useState('');
+  const [isSigning, setIsSigning] = useState(false);
+  const qc = useQueryClient();
+
+  const handleSwearAllegiance = async () => {
+    setIsSigning(true);
+    try {
+      const byName = activeDecree?.activeDecreeByName || 'Sheikh';
+      const defaultComment = `I, ${user?.username || 'the peasant'}, hereby swear absolute allegiance to Sheikh ${byName} and apologize for my absolute tactical incompetence! 📜👑`;
+      const finalComment = apologyComment.trim() !== '' ? apologyComment.trim() : defaultComment;
+
+      await apiSwearAllegiance(user?.groupId || '', finalComment);
+      toast.success('You have sworn allegiance to the Sheikh! 📜👑');
+      qc.invalidateQueries({ queryKey: ['activeDecree', user?.groupId] });
+      qc.invalidateQueries({ queryKey: ['leaderboard', user?.groupId] });
+      qc.invalidateQueries({ queryKey: ['activity', user?.groupId] });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to sign the Loyalty Oath');
+    } finally {
+      setIsSigning(false);
+    }
+  };
+
+  const lastPlacePlayerId = leaderboard.length > 0 ? leaderboard[leaderboard.length - 1]?.userId : null;
+  const isCommunityServiceLock =
+    activeDecree?.activeDecreeType === 'COMMUNITY_SERVICE' &&
+    activeDecree?.activeDecreeTargetId === user?.id &&
+    user?.id === lastPlacePlayerId;
+
+  const isClownLock =
+    activeDecree?.activeDecreeType === 'CLOWN_LOCK' &&
+    activeDecree?.activeDecreeTargetId === user?.id;
+
+  useEffect(() => {
+    const themes = ['theme-lusail-gold', 'theme-al-bayt-crimson', 'theme-al-janoub-teal', 'theme-lusail-night', 'theme-ahmad-sunset', 'theme-sacked-manager', 'theme-clown'];
+    themes.forEach((t) => document.body.classList.remove(t));
+
+    if (isCommunityServiceLock) {
+      document.body.classList.add('theme-sacked-manager');
+    } else if (isClownLock) {
+      document.body.classList.add('theme-clown');
+    } else {
+      const savedTheme = localStorage.getItem('wcp_theme') || 'theme-lusail-gold';
+      document.body.classList.add(savedTheme);
+    }
+  }, [isCommunityServiceLock, isClownLock]);
+
   // Auth guard — redirect to login if no session, or to group-setup if no group
   useEffect(() => {
     if (!hydrated) return;
@@ -586,6 +839,24 @@ export default function DashboardPage() {
       <TabNav />
 
       <main className="max-w-5xl mx-auto px-4 pt-6 pb-28 md:pb-10">
+        {isCommunityServiceLock && (
+          <div className="bg-zinc-950 border border-red-500/20 text-zinc-400 rounded-2xl p-4 mb-5 text-center text-xs font-semibold relative overflow-hidden shadow-inner animate-pulse-border">
+            <div className="absolute top-0 right-0 transform translate-x-8 -translate-y-8 rotate-45 bg-red-550/10 text-red-500 text-[8px] font-black py-1 px-10 tracking-widest uppercase">
+              SACKED
+            </div>
+            🔒 **COMMUNITY SERVICE MODE ACTIVE:** You have been sentenced to community service by order of the Sheikh. Your dashboard theme is locked to plain gray.
+          </div>
+        )}
+
+        {isClownLock && (
+          <div className="bg-pink-950 border border-pink-500/30 text-pink-300 rounded-2xl p-4 mb-5 text-center text-xs font-bold relative overflow-hidden shadow-inner animate-pulse-border">
+            <div className="absolute top-0 right-0 transform translate-x-8 -translate-y-8 rotate-45 bg-pink-500/20 text-pink-400 text-[8px] font-black py-1 px-10 tracking-widest uppercase">
+              CLOWN
+            </div>
+            🤡 **CLOWN THEME LOCK ACTIVE:** You have been crowned the League Clown by order of the Sheikh. Your theme is locked to neon clown styling.
+          </div>
+        )}
+
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={activeTab}
@@ -602,6 +873,90 @@ export default function DashboardPage() {
       </main>
 
       <BottomNav />
+
+      {/* Loyalty Oath Overlay Modal */}
+      <AnimatePresence>
+        {isLoyaltyOathTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/90 backdrop-blur-md animate-fade-in"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', duration: 0.5 }}
+              className="w-full max-w-lg bg-gradient-to-b from-amber-950/30 to-zinc-900 border border-amber-500/30 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden text-center"
+            >
+              {/* Background ambient gold light */}
+              <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6 shadow-gold-glow/10">
+                <span className="text-3xl animate-bounce">📜</span>
+              </div>
+
+              <h2 className="text-2xl font-black text-white tracking-tight">The Loyalty Oath</h2>
+              <p className="text-amber-400 font-bold text-xs uppercase tracking-widest mt-1">BY ORDER OF THE SHEIKH</p>
+
+              <div className="bg-zinc-950/60 border border-white/5 rounded-2xl p-5 my-6 text-left relative">
+                <span className="text-zinc-650 font-serif text-5xl absolute -top-2 -left-1 select-none pointer-events-none">“</span>
+                <p className="text-sm text-zinc-300 leading-relaxed font-medium relative z-10 pl-4 pr-2 pt-2">
+                  I, <span className="text-amber-400 font-black">{user?.username}</span>, do hereby acknowledge my absolute tactical incompetence and swear total, undivided allegiance to Sheikh <span className="text-amber-400 font-black">{activeDecree?.activeDecreeByName}</span>. I pledge to honor their rule and consult their wisdom for the remainder of this round.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2.5 text-left mb-6">
+                <label className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider font-semibold">Leave your apology comment for the league feed</label>
+                <textarea
+                  value={apologyComment}
+                  onChange={(e) => setApologyComment(e.target.value)}
+                  placeholder={`e.g., I apologize to Sheikh ${activeDecree?.activeDecreeByName || 'Sheikh'} for my terrible football knowledge.`}
+                  className="bg-zinc-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/10 transition-all resize-none h-20"
+                />
+              </div>
+
+              <button
+                onClick={handleSwearAllegiance}
+                disabled={isSigning}
+                className="w-full bg-gradient-to-r from-amber-400 to-amber-550 hover:from-amber-500 hover:to-amber-600 disabled:from-amber-500/50 disabled:to-amber-600/50 text-black font-black uppercase tracking-wider py-4 rounded-xl shadow-gold-glow flex items-center justify-center gap-2 cursor-pointer transition-all text-xs"
+              >
+                {isSigning ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                    Signing Oath...
+                  </>
+                ) : (
+                  <>
+                    <span>Sign & Swear Allegiance</span>
+                    <span className="text-sm">👑</span>
+                  </>
+                )}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Clown Emojis floating animation */}
+      {isClownLock && (
+        <div className="fixed inset-0 pointer-events-none z-[45] overflow-hidden">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute text-3xl animate-float-clown animate-infinite"
+              style={{
+                left: `${(i * 9) % 100}%`,
+                animationDelay: `${i * 0.7}s`,
+                bottom: `-50px`,
+              }}
+            >
+              🤡
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

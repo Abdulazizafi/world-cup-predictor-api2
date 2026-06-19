@@ -17,10 +17,11 @@ interface CompareModalProps {
 
 export default function CompareModal({ isOpen, onClose, groupId, friendId, friendName }: CompareModalProps) {
   // 1. Fetch friend's past predictions
-  const { data: friendPredictions = [], isLoading: loadingFriend } = useQuery({
+  const { data: friendPredictions = [], isLoading: loadingFriend, error: compareError, isError: isCompareError } = useQuery({
     queryKey: ['compare', groupId, friendId],
     queryFn: () => apiComparePredictions(groupId, friendId),
     enabled: isOpen && !!friendId,
+    retry: false,
   });
 
   // 2. Fetch matches (contains current user's predictions and actual scores)
@@ -40,6 +41,13 @@ export default function CompareModal({ isOpen, onClose, groupId, friendId, frien
     const isStarted = new Date(m.matchTime) <= new Date();
     const hasMyPred = m.userPrediction !== null;
     const hasFriendPred = friendPredMap.has(m.id);
+    
+    // If the backend has returned the friend's prediction (e.g. Royal Spy active),
+    // we should allow it to be displayed, even if it hasn't kicked off yet.
+    if (hasFriendPred && !isStarted) {
+      return true;
+    }
+    
     return isStarted && (hasMyPred || hasFriendPred);
   });
 
@@ -80,10 +88,20 @@ export default function CompareModal({ isOpen, onClose, groupId, friendId, frien
 
             {/* Content Body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {isLoading ? (
+              {isCompareError ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center text-red-400 gap-3">
+                  <span className="text-4xl animate-bounce">👀</span>
+                  <div>
+                    <p className="font-bold text-white text-sm">Comparison Blocked</p>
+                    <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed max-w-sm mx-auto">
+                      {(compareError as any)?.response?.data?.message || 'You are blocked from comparing picks by order of the Sheikh!'}
+                    </p>
+                  </div>
+                </div>
+              ) : isLoading ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                   <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
-                  <p className="text-zinc-500 text-xs">Loading comparison details...</p>
+                  <p className="text-zinc-550 text-xs">Loading comparison details...</p>
                 </div>
               ) : startedMatches.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center text-zinc-500 gap-3">

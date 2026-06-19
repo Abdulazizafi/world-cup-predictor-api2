@@ -126,5 +126,41 @@ export const apiGetGroupInsights = async (
   return res.data.data.insights;
 };
 
+export const apiGetActiveDecree = async (
+  groupId: string,
+): Promise<{
+  activeDecreeType: string | null;
+  activeDecreeTargetId: string | null;
+  activeDecreeTargetName: string | null;
+  activeDecreeBy: string | null;
+  activeDecreeByName: string | null;
+  activeDecreeAt: string | null;
+  activeDecreeSigned: boolean;
+  activeDecreeComment: string | null;
+  availableDecrees: string[];
+} | null> => {
+  if (USE_MOCK) return null;
+  const res = await http.get(`/groups/${groupId}/active-decree`);
+  return res.data.data.activeDecree;
+};
+
+export const apiIssueDecree = async (
+  groupId: string,
+  type: string,
+  targetId?: string,
+  comment?: string,
+): Promise<void> => {
+  if (USE_MOCK) return;
+  await http.post(`/groups/${groupId}/decree`, { type, targetId, comment });
+};
+
+export const apiSwearAllegiance = async (
+  groupId: string,
+  comment?: string,
+): Promise<void> => {
+  if (USE_MOCK) return;
+  await http.post(`/groups/${groupId}/swear-allegiance`, { comment });
+};
+
 
 

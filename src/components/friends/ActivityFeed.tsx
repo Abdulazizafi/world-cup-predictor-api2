@@ -6,7 +6,34 @@ import { timeAgo, getFlagUrl, getInitial, isPastKickoff } from '@/lib/utils';
 import type { ActivityEntry } from '@/types';
 
 function ActivityItem({ entry, index }: { entry: ActivityEntry; index: number }) {
-  const isRevealed = isPastKickoff(entry.matchTime);
+  if (entry.isLoyaltyOath) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
+        className="p-4 glass rounded-xl border border-amber-550/25 bg-amber-500/5 relative overflow-hidden shadow-gold-glow/5 flex gap-3.5 items-start"
+      >
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-bold text-sm text-black shrink-0 shadow-gold-glow">
+          📜
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="font-black text-amber-400 text-sm">{entry.username}</span>
+            <span className="text-zinc-400 text-xs font-semibold">has sworn the</span>
+            <span className="text-amber-400 text-xs font-black uppercase tracking-wider">Loyalty Oath</span>
+            <span className="text-zinc-400 text-xs font-semibold">to Sheikh {entry.sheikhName || 'Sheikh'}!</span>
+          </div>
+          <p className="mt-2 text-xs italic text-zinc-100 border-l-2 border-amber-500/30 pl-3 leading-relaxed">
+            "{entry.commentText}"
+          </p>
+        </div>
+        <span className="text-[10px] text-zinc-500 shrink-0 self-center">{timeAgo(entry.createdAt)}</span>
+      </motion.div>
+    );
+  }
+
+  const isRevealed = entry.matchTime ? isPastKickoff(entry.matchTime) : false;
 
   return (
     <motion.div
@@ -27,13 +54,13 @@ function ActivityItem({ entry, index }: { entry: ActivityEntry; index: number })
           <span className="text-zinc-400 text-sm">predicted</span>
           <span className="inline-flex items-center gap-1 font-semibold text-sm">
             <span className="w-5 h-3.5 relative rounded overflow-hidden border border-white/10 shrink-0 bg-zinc-900 inline-block align-middle">
-              <img src={getFlagUrl(entry.teamA)} alt={entry.teamA} className="w-full h-full object-cover" />
+              <img src={getFlagUrl(entry.teamA || '')} alt={entry.teamA} className="w-full h-full object-cover" />
             </span>
             <span>{entry.teamA}</span>
             <span className="text-zinc-500 font-normal mx-0.5">vs</span>
             <span>{entry.teamB}</span>
             <span className="w-5 h-3.5 relative rounded overflow-hidden border border-white/10 shrink-0 bg-zinc-900 inline-block align-middle">
-              <img src={getFlagUrl(entry.teamB)} alt={entry.teamB} className="w-full h-full object-cover" />
+              <img src={getFlagUrl(entry.teamB || '')} alt={entry.teamB} className="w-full h-full object-cover" />
             </span>
           </span>
         </div>

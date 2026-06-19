@@ -164,6 +164,25 @@ body.theme-ahmad-sunset {
   --color-amber-550: #ea580c;
 }
 
+/* 6. SACKED MANAGER (Depressing Slate/Gray Community Service Theme) */
+body.theme-sacked-manager {
+  --theme-bg-base: #111115;
+  --theme-glow-1: rgba(100, 116, 139, 0.12); /* slate */
+  --theme-glow-2: rgba(71, 85, 105, 0.08);   /* slate dark */
+  --theme-glow-3: rgba(51, 65, 85, 0.06);     /* slate darker */
+  --theme-accent-glow: rgba(100, 116, 139, 0.2);
+
+  --color-amber-300: #cbd5e1; /* slate-300 */
+  --color-amber-400: #94a3b8; /* slate-400 */
+  --color-amber-500: #64748b; /* slate-500 */
+  --color-amber-600: #475569; /* slate-600 */
+  --color-amber-700: #334155; /* slate-700 */
+  --color-amber-800: #1e293b; /* slate-800 */
+  --color-amber-900: #0f172a; /* slate-900 */
+  --color-amber-450: #94a3b8;
+  --color-amber-550: #475569;
+}
+
 /* ── Dynamic shadow glow classes ───────────────────── */
 .shadow-gold-glow {
   box-shadow: 0 4px 20px var(--theme-accent-glow);
@@ -278,4 +297,102 @@ body.theme-ahmad-sunset {
   0%, 100% { border-color: rgba(239, 68, 68, 0.25); box-shadow: 0 0 10px rgba(239, 68, 68, 0.15); }
   50% { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 20px rgba(239, 68, 68, 0.35); }
 }
+
+/* ═══════════════════════════════════════════════════════
+   7. CLOWN THEME (Crowned League Clown neon override)
+   ═══════════════════════════════════════════════════════ */
+body.theme-clown {
+  --theme-bg-base: #1a0012; /* dark base for readability */
+  --theme-glow-1: rgba(255, 0, 127, 0.35); /* neon pink */
+  --theme-glow-2: rgba(57, 255, 20, 0.25);  /* neon green */
+  --theme-glow-3: rgba(0, 255, 255, 0.25);  /* neon cyan */
+  --theme-accent-glow: rgba(255, 0, 127, 0.45);
+
+  --color-amber-300: #ff007f; /* pink */
+  --color-amber-400: #39ff14; /* neon green */
+  --color-amber-500: #ffff00; /* neon yellow */
+  --color-amber-600: #00ffff; /* neon cyan */
+  --color-amber-700: #ff7f00; /* neon orange */
+  --color-amber-800: #ff00ff; /* magenta */
+  --color-amber-900: #9400d3; /* violet */
+  --color-amber-450: #39ff14;
+  --color-amber-550: #ffff00;
+
+  font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif !important;
+}
+
+/* Make body background in clown theme extremely vibrant */
+body.theme-clown::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 15% 20%, rgba(255, 0, 127, 0.12) 0%, transparent 45%),
+              radial-gradient(circle at 85% 80%, rgba(0, 255, 255, 0.12) 0%, transparent 45%),
+              radial-gradient(circle at 50% 50%, rgba(57, 255, 20, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Custom override for glass cards under clown theme */
+body.theme-clown .glass {
+  background: rgba(28, 4, 20, 0.85) !important;
+  border: 1.5px dashed #39ff14 !important; /* neon green dashed border */
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.35), inset 0 0 10px rgba(57, 255, 20, 0.15) !important;
+  transition: all 0.3s ease;
+}
+
+body.theme-clown .glass:hover {
+  border-color: #ffff00 !important; /* turns neon yellow on hover */
+  box-shadow: 0 0 25px rgba(255, 0, 127, 0.55), inset 0 0 15px rgba(0, 255, 255, 0.25) !important;
+}
+
+/* Typography elements in clown theme */
+body.theme-clown button, 
+body.theme-clown select, 
+body.theme-clown input, 
+body.theme-clown textarea, 
+body.theme-clown h1, 
+body.theme-clown h2, 
+body.theme-clown h3, 
+body.theme-clown h4, 
+body.theme-clown p,
+body.theme-clown span {
+  font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif !important;
+}
+
+/* Custom clown badge style */
+.badge-clown {
+  background: linear-gradient(90deg, #ff007f, #39ff14, #00ffff, #ffff00);
+  background-size: 300% 100%;
+  animation: stripe-slide 3s linear infinite;
+  color: black;
+  text-shadow: 0 0 2px white;
+}
+
+/* Floating clown emoji animation */
+@keyframes floatClown {
+  0% {
+    transform: translateY(110vh) translateX(0) scale(0.6) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(50vh) translateX(25px) scale(1) rotate(180deg);
+    opacity: 0.9;
+  }
+  90% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-10vh) translateX(-25px) scale(1.3) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-float-clown {
+  animation: floatClown 9s ease-in-out infinite;
+}
+
 

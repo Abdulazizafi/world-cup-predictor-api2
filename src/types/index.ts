@@ -48,22 +48,26 @@ export interface LeaderboardEntry {
   outcomeCount?: number;
   incorrectCount?: number;
   doubleUsed?: number;
+  isSheikh?: boolean;
 }
 
 export interface ActivityEntry {
   username: string;
-  matchId: string;
-  teamA: string;
-  teamB: string;
-  matchTime: string;
-  status: MatchStatus;
-  predictedScoreA: number | null;   // null = hidden pre-kickoff
-  predictedScoreB: number | null;
+  matchId?: string;
+  teamA?: string;
+  teamB?: string;
+  matchTime?: string;
+  status?: MatchStatus;
+  predictedScoreA?: number | null;   // null = hidden pre-kickoff
+  predictedScoreB?: number | null;
   pointsEarned?: number;
   useDoublePoints?: boolean;
   scoreA?: number | null;
   scoreB?: number | null;
   createdAt: string;
+  isLoyaltyOath?: boolean;
+  commentText?: string;
+  sheikhName?: string;
 }
 
 export interface Group {

@@ -5,15 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, ChevronUp, ChevronDown, Minus, ArrowRightLeft } from 'lucide-react';
 import { cn, getInitial } from '@/lib/utils';
 import type { LeaderboardEntry } from '@/types';
+import { toast } from 'react-hot-toast';
 
 interface LeaderboardRowProps {
   entry: LeaderboardEntry;
   index: number;
   isRelegated?: boolean;
+  isCompareBlocked?: boolean;
   onCompare?: (userId: string, username: string) => void;
 }
 
-export default function LeaderboardRow({ entry, index, isRelegated, onCompare }: LeaderboardRowProps) {
+export default function LeaderboardRow({ entry, index, isRelegated, isCompareBlocked, onCompare }: LeaderboardRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isTop3 = entry.rank <= 3;
 
@@ -33,6 +35,8 @@ export default function LeaderboardRow({ entry, index, isRelegated, onCompare }:
           'flex items-center gap-3 px-4 py-3 rounded-xl transition-colors cursor-pointer select-none',
           isRelegated
             ? 'bg-red-950/10 border border-red-500/30 shadow-red-glow animate-pulse-border'
+            : entry.rank === 1
+            ? 'bg-amber-500/10 border border-amber-500/35 shadow-gold-glow/25'
             : entry.isCurrentUser
             ? 'bg-amber-500/8 border border-amber-500/25 shadow-gold-glow/20'
             : 'bg-zinc-900/50 border border-white/5 hover:border-white/10',
@@ -94,6 +98,11 @@ export default function LeaderboardRow({ entry, index, isRelegated, onCompare }:
             {entry.isCurrentUser && (
               <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-black shrink-0">YOU</span>
             )}
+            {entry.rank === 1 && (
+              <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-black tracking-wider shrink-0 flex items-center gap-0.5 shadow-gold-glow/20">
+                👑 ROUND SHEIKH
+              </span>
+            )}
             {isRelegated && (
               <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full font-black tracking-wider shrink-0 animate-pulse">RELEGATION</span>
             )}
@@ -147,14 +156,24 @@ export default function LeaderboardRow({ entry, index, isRelegated, onCompare }:
               {/* Compare Button */}
               {!entry.isCurrentUser && onCompare && (
                 <button
+                  disabled={isCompareBlocked}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (isCompareBlocked) {
+                      toast.error('You are blocked from comparing picks by order of the Sheikh! 👀');
+                      return;
+                    }
                     onCompare(entry.userId, entry.username);
                   }}
-                  className="w-fit flex items-center gap-1.5 px-3.5 py-1.5 bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-white/10 rounded-xl text-xs font-bold text-zinc-350 hover:text-white transition-all cursor-pointer select-none focus:outline-none"
+                  className={cn(
+                    "w-fit flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all select-none focus:outline-none",
+                    isCompareBlocked
+                      ? "bg-zinc-900/20 border border-red-500/20 text-red-400 cursor-not-allowed opacity-75"
+                      : "bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-white/10 text-zinc-350 hover:text-white cursor-pointer"
+                  )}
                 >
-                  <ArrowRightLeft size={12} className="text-zinc-400" />
-                  Compare Picks
+                  <ArrowRightLeft size={12} className={isCompareBlocked ? "text-red-450" : "text-zinc-400"} />
+                  {isCompareBlocked ? "Compare Blocked 👀" : "Compare Picks"}
                 </button>
               )}
             </div>
