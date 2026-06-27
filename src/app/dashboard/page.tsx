@@ -26,10 +26,11 @@ import type { Match, DashTab } from '@/types';
 
 // ── Matches Tab ──────────────────────────────────────────────────
 function MatchesTab() {
-  const { data: matches = [], isLoading } = useQuery({
+  const { data: matches = [], isLoading, isError } = useQuery({
     queryKey: ['matches'],
     queryFn: apiGetMatches,
     refetchInterval: 60_000,
+    retry: 1,
   });
 
   const [filter, setFilter] = useState('All');
@@ -282,6 +283,21 @@ function MatchesTab() {
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[...Array(4)].map((_, i) => <MatchCardSkeleton key={i} />)}
+        </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center py-16 text-center text-zinc-400 gap-3 bg-zinc-950/20 border border-white/5 rounded-2xl p-6">
+          <span className="text-3xl animate-bounce">📡</span>
+          <p className="font-bold text-white">Connection Error</p>
+          <p className="text-xs text-zinc-500 max-w-xs leading-relaxed">
+            Could not connect to the server. The API server might be waking up from sleep mode. Please wait a few seconds and try refreshing.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 bg-amber-500 hover:bg-amber-600 text-black text-xs font-black uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-gold-glow flex items-center gap-1.5 cursor-pointer"
+          >
+            <RefreshCw size={12} className="animate-spin" style={{ animationDuration: '3s' }} />
+            Refresh Page
+          </button>
         </div>
       ) : statusFilteredMatches.length === 0 ? (
         <div className="flex flex-col items-center py-16 text-center text-zinc-500 gap-3">

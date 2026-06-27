@@ -5,6 +5,7 @@ import {
   MOCK_USER, MOCK_MATCHES, MOCK_LEADERBOARD, MOCK_ACTIVITY
 } from './mock';
 import type { Match, LeaderboardEntry, ActivityEntry, User } from '@/types';
+import { useAppStore } from '../store/useAppStore';
 
 export const USE_MOCK = false; // ← Real API on :3000 (set true for offline mock)
 
@@ -13,6 +14,18 @@ const http = axios.create({
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
+
+// Response interceptor to handle session expiration (401 Unauthorized)
+http.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear user from store, which triggers automatic redirect to /login
+      useAppStore.getState().setUser(null);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Simulate network delay for mock mode
 const delay = (ms = 400) => new Promise(r => setTimeout(r, ms));
