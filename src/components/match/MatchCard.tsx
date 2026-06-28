@@ -72,6 +72,9 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
   const [useDoublePoints, setUseDoublePoints] = useState<boolean>(
     !!match.userPrediction?.useDoublePoints
   );
+  const [penaltyWinner, setPenaltyWinner] = useState<'A' | 'B' | null>(
+    (match.userPrediction?.penaltyWinner as 'A' | 'B') || null
+  );
   const [saving, setSaving] = useState(false);
 
   const { date, time } = formatMatchTime(match.matchTime);
@@ -82,11 +85,13 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
       setScoreA(String(match.userPrediction.predictedScoreA));
       setScoreB(String(match.userPrediction.predictedScoreB));
       setUseDoublePoints(!!match.userPrediction.useDoublePoints);
+      setPenaltyWinner((match.userPrediction.penaltyWinner as 'A' | 'B') || null);
       setIsEditing(false);
     } else {
       setScoreA('');
       setScoreB('');
       setUseDoublePoints(false);
+      setPenaltyWinner(null);
       setIsEditing(false);
     }
   }, [match.userPrediction]);
@@ -98,9 +103,21 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
       toast.error('Enter valid scores (0–30)');
       return;
     }
+
+    const isKnockout = !match.stage.toLowerCase().includes('group');
+    const isDraw = a === b;
+    let finalPenWinner: string | null = null;
+    if (isKnockout && isDraw) {
+      if (!penaltyWinner) {
+        toast.error('Please choose a penalty shootout winner!');
+        return;
+      }
+      finalPenWinner = penaltyWinner;
+    }
+
     setSaving(true);
     try {
-      await apiSubmitPrediction(match.id, a, b, useDoublePoints);
+      await apiSubmitPrediction(match.id, a, b, useDoublePoints, finalPenWinner);
       await qc.invalidateQueries({ queryKey: ['matches'] });
       setIsEditing(false);
       triggerParticles(e);
@@ -114,7 +131,7 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
     } finally {
       setSaving(false);
     }
-  }, [scoreA, scoreB, useDoublePoints, match.id, match.teamA, match.teamB, qc]);
+  }, [scoreA, scoreB, useDoublePoints, penaltyWinner, match.id, match.teamA, match.teamB, match.stage, qc]);
 
   const isLive = match.status === 'LIVE';
   const isFinished = match.status === 'FINISHED';
@@ -309,6 +326,46 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
           </div>
         </div>
 
+        {/* Probabilities Row */}
+        {match.probA !== undefined && match.probB !== undefined && match.probDraw !== undefined && (
+          <div className="mb-5 bg-zinc-950/40 border border-white/5 rounded-xl p-2.5">
+            <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 mb-1.5 px-0.5 select-none">
+              <span className={match.probA === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold flex items-center gap-0.5' : ''}>
+                {match.probA === Math.min(match.probA, match.probB, match.probDraw) && '🔥'}
+                {match.teamA} {match.probA}%
+              </span>
+              <span className={match.probDraw === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold flex items-center gap-0.5' : ''}>
+                {match.probDraw === Math.min(match.probA, match.probB, match.probDraw) && '🔥'}
+                Draw {match.probDraw}%
+              </span>
+              <span className={match.probB === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold flex items-center gap-0.5' : ''}>
+                {match.probB === Math.min(match.probA, match.probB, match.probDraw) && '🔥'}
+                {match.teamB} {match.probB}%
+              </span>
+            </div>
+            {/* Probability Progress Bar */}
+            <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden flex">
+              <div 
+                style={{ width: `${match.probA}%` }} 
+                className="h-full bg-amber-500"
+              />
+              <div 
+                style={{ width: `${match.probDraw}%` }} 
+                className="h-full bg-zinc-650"
+              />
+              <div 
+                style={{ width: `${match.probB}%` }} 
+                className="h-full bg-zinc-400"
+              />
+            </div>
+            <div className="mt-1.5 text-center">
+              <span className="text-[9px] text-amber-500/80 font-black tracking-widest uppercase">
+                🔥 Underdog Win Bonus: +20 pts
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Prediction section */}
         <div className="border-t border-white/5 pt-4">
           {/* Case 1: Match is locked AND no prediction was made */}
@@ -382,9 +439,16 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
 
               {/* Bottom Success / Status Bar */}
               <div className="flex items-center justify-between border-t border-white/5 pt-3">
-                <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-semibold">
-                  <Lock size={12} className="text-zinc-500" />
-                  <span>Prediction locked</span>
+                <div className="flex flex-col gap-1 text-left">
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-semibold">
+                    <Lock size={12} className="text-zinc-500" />
+                    <span>Prediction locked</span>
+                  </div>
+                  {!match.stage.toLowerCase().includes('group') && match.userPrediction && match.userPrediction.predictedScoreA === match.userPrediction.predictedScoreB && (
+                    <div className="text-[10px] font-bold text-zinc-550 uppercase mt-0.5">
+                      Shootout: {match.userPrediction.penaltyWinner === 'A' ? match.teamA : match.teamB} to win
+                    </div>
+                  )}
                 </div>
                 {match.status === 'FINISHED' && (
                   <span className="inline-flex items-center gap-1 bg-amber-500/15 border border-amber-500/25 text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full shadow-gold-glow/5 animate-fade-in">
@@ -476,9 +540,16 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
 
                   {/* Bottom Success Footer: Prediction saved | Edit Prediction */}
                   <div className="flex items-center justify-between border-t border-white/5 pt-3">
-                    <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Prediction saved
+                    <div className="flex flex-col gap-1 text-left">
+                      <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Prediction saved
+                      </div>
+                      {!match.stage.toLowerCase().includes('group') && match.userPrediction && match.userPrediction.predictedScoreA === match.userPrediction.predictedScoreB && (
+                        <div className="text-[10px] font-bold text-zinc-400 uppercase">
+                          Shootout: {match.userPrediction.penaltyWinner === 'A' ? match.teamA : match.teamB} to win
+                        </div>
+                      )}
                     </div>
                     <button
                       type="button"
@@ -542,6 +613,39 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                       </label>
                     </div>
                   </div>
+
+                  {/* Penalty Shootout Selector (Knockout Draws) */}
+                  {!match.stage.toLowerCase().includes('group') && scoreA !== '' && scoreB !== '' && parseInt(scoreA, 10) === parseInt(scoreB, 10) && (
+                    <div className="flex items-center justify-center gap-4 mt-2 bg-zinc-950/30 border border-white/5 rounded-xl p-2.5 select-none w-full animate-fade-in">
+                      <button
+                        type="button"
+                        onClick={() => setPenaltyWinner('A')}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black uppercase transition-all border ${
+                          penaltyWinner === 'A'
+                            ? 'bg-emerald-500 text-black border-emerald-400 font-black'
+                            : 'bg-zinc-900 text-zinc-500 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        {penaltyWinner === 'A' ? 'P' : 'L'}
+                      </button>
+
+                      <span className="text-[10px] text-zinc-500 font-black tracking-widest uppercase">
+                        Shootout Winner
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => setPenaltyWinner('B')}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black uppercase transition-all border ${
+                          penaltyWinner === 'B'
+                            ? 'bg-emerald-500 text-black border-emerald-400 font-black'
+                            : 'bg-zinc-900 text-zinc-500 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        {penaltyWinner === 'B' ? 'P' : 'L'}
+                      </button>
+                    </div>
+                  )}
 
                   {/* Save & Cancel Buttons */}
                   <div className="flex gap-2 w-full pt-2">

@@ -24,6 +24,9 @@ export interface Match {
   stage: string;
   venue: string | null;
   userPrediction: UserPrediction | null;
+  probA?: number;
+  probB?: number;
+  probDraw?: number;
 }
 
 export interface UserPrediction {
@@ -33,6 +36,7 @@ export interface UserPrediction {
   predictedScoreB: number;
   pointsEarned: number;
   useDoublePoints?: boolean;
+  penaltyWinner?: string | null;
   createdAt: string;
   updatedAt: string;
 }

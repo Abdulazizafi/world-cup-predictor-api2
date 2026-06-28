@@ -95,19 +95,17 @@ function ActivityItem({ entry, index }: { entry: ActivityEntry; index: number })
             {/* Points Badge (Finished Matches) */}
             {entry.status === 'FINISHED' && entry.pointsEarned !== undefined && (
               <div className="flex items-center gap-2 mt-0.5">
-                {entry.pointsEarned === 100 && (
+                {entry.pointsEarned >= 100 ? (
                   <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-emerald-500/5">
-                    Exact Score (+100 pts)
+                    Exact Score (+{entry.pointsEarned} pts)
                   </span>
-                )}
-                {entry.pointsEarned === 40 && (
+                ) : entry.pointsEarned >= 40 ? (
                   <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-gold-glow/5">
-                    Correct Outcome (+40 pts)
+                    Correct Outcome (+{entry.pointsEarned} pts)
                   </span>
-                )}
-                {entry.pointsEarned === 0 && (
+                ) : (
                   <span className="text-[10px] bg-zinc-800/40 text-zinc-500 border border-zinc-700/20 px-2.5 py-0.5 rounded-full font-semibold">
-                    Incorrect (+0 pts)
+                    Incorrect (+{entry.pointsEarned} pts)
                   </span>
                 )}
               </div>

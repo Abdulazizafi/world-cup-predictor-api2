@@ -66,9 +66,10 @@ export const apiSubmitPrediction = async (
   predictedScoreA: number,
   predictedScoreB: number,
   useDoublePoints?: boolean,
+  penaltyWinner?: string | null,
 ): Promise<void> => {
   if (USE_MOCK) { await delay(500); return; }
-  await http.post('/predictions', { matchId, predictedScoreA, predictedScoreB, useDoublePoints });
+  await http.post('/predictions', { matchId, predictedScoreA, predictedScoreB, useDoublePoints, penaltyWinner });
 };
 
 // ── Groups ──────────────────────────────────────────────────────

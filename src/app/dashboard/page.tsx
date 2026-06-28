@@ -752,6 +752,22 @@ const TAB_ORDER: DashTab[] = ['matches', 'leaderboard', 'predictions', 'friends'
 
 export default function DashboardPage() {
   const { activeTab, user, hydrated } = useAppStore();
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
+
+  useEffect(() => {
+    if (hydrated) {
+      const seen = localStorage.getItem('wcp_scoring_announcement_seen');
+      if (!seen) {
+        setShowAnnouncement(true);
+      }
+    }
+  }, [hydrated]);
+
+  const dismissAnnouncement = () => {
+    localStorage.setItem('wcp_scoring_announcement_seen', 'true');
+    setShowAnnouncement(false);
+  };
+
   const router = useRouter();
   const [prevTab, setPrevTab] = useState<DashTab>(activeTab);
   const [direction, setDirection] = useState(0);
@@ -973,6 +989,68 @@ export default function DashboardPage() {
           ))}
         </div>
       )}
+      {/* Announcement Popup Modal */}
+      <AnimatePresence>
+        {showAnnouncement && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/95 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', duration: 0.5 }}
+              className="w-full max-w-lg bg-zinc-900 border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden text-center animate-fade-in"
+            >
+              {/* Background ambient light */}
+              <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6 shadow-gold-glow/10">
+                <span className="text-3xl animate-bounce">🏆</span>
+              </div>
+
+              <h2 className="text-2xl font-black text-white tracking-tight">New Rules & Scoring Additions!</h2>
+              <p className="text-amber-400 font-bold text-xs uppercase tracking-widest mt-1">IMPORTANT UPDATES</p>
+
+              <div className="my-6 space-y-4 text-left">
+                {/* 1. Underdog Win Bonus */}
+                <div className="bg-zinc-950/60 border border-white/5 rounded-2xl p-4 flex gap-3">
+                  <span className="text-xl shrink-0 mt-0.5">🔥</span>
+                  <div>
+                    <h4 className="font-black text-sm text-white">Underdog Win Bonus (+20 pts)</h4>
+                    <p className="text-xs text-zinc-400 leading-relaxed mt-1">
+                      Every match now displays team win/draw probabilities. If you correctly predict an outcome that has the **lowest probability** (marked with a <span className="text-amber-400 font-bold">🔥</span>), you get an extra **+20 points** (+40 points if using your X2 wildcard!).
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Penalty Winner selection */}
+                <div className="bg-zinc-950/60 border border-white/5 rounded-2xl p-4 flex gap-3">
+                  <span className="text-xl shrink-0 mt-0.5">⚽</span>
+                  <div>
+                    <h4 className="font-black text-sm text-white">Knockout Penalty Winner (P/L)</h4>
+                    <p className="text-xs text-zinc-400 leading-relaxed mt-1">
+                      For knockout matches, if you predict a Draw, you must choose the penalty shootout winner. 
+                      Guessing the penalty winner correct gets you **full points** (100 or 40). Guessing it wrong **halves your points** (50 or 20).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={dismissAnnouncement}
+                className="w-full bg-gradient-to-r from-amber-400 to-amber-550 hover:from-amber-500 hover:to-amber-600 text-black font-black uppercase tracking-wider py-4 rounded-xl shadow-gold-glow flex items-center justify-center gap-2 cursor-pointer transition-all text-xs"
+              >
+                <span>Got it, let's predict!</span>
+                <span className="text-sm">→</span>
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

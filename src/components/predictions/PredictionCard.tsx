@@ -52,8 +52,8 @@ export default function PredictionCard({ match, index = 0 }: { match: Match; ind
         <div className="text-right">
           {match.status === 'FINISHED' && (
             <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl font-black text-lg ${
-              pred.pointsEarned === 100 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-gold-glow' :
-              pred.pointsEarned === 40 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+              pred.pointsEarned >= 100 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-gold-glow' :
+              pred.pointsEarned >= 40 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
               'bg-zinc-800 text-zinc-500 border border-white/5'
             }`}>
               +{pred.pointsEarned}
