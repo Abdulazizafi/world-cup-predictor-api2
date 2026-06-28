@@ -327,7 +327,7 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
         </div>
 
         {/* Probabilities Row */}
-        {match.probA !== undefined && match.probB !== undefined && match.probDraw !== undefined && (
+        {match.probA !== undefined && match.probB !== undefined && (
           <div className="mb-5 bg-zinc-950/40 border border-white/5 rounded-xl p-2.5">
             <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 mb-1.5 px-0.5 select-none">
               <span className={`flex items-center gap-1 ${match.probA < match.probB ? 'text-amber-400 font-extrabold' : ''}`}>
@@ -337,9 +337,6 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                   </span>
                 )}
                 <span>{match.teamA} {match.probA}%</span>
-              </span>
-              <span className="flex items-center gap-1 select-none">
-                <span>Draw {match.probDraw}%</span>
               </span>
               <span className={`flex items-center gap-1 ${match.probB < match.probA ? 'text-amber-400 font-extrabold' : ''}`}>
                 {match.probB < match.probA && (
@@ -357,10 +354,6 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                 className="h-full bg-amber-500"
               />
               <div 
-                style={{ width: `${match.probDraw}%` }} 
-                className="h-full bg-zinc-650"
-              />
-              <div 
                 style={{ width: `${match.probB}%` }} 
                 className="h-full bg-zinc-400"
               />
@@ -370,7 +363,7 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                 Bonus
               </span>
               <span className="text-[9px] text-zinc-400 font-bold tracking-wide">
-                Underdog outcome yields +20 pts extra!
+                Underdog team win yields +20 pts extra!
               </span>
             </div>
           </div>
