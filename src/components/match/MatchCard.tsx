@@ -330,24 +330,19 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
         {match.probA !== undefined && match.probB !== undefined && match.probDraw !== undefined && (
           <div className="mb-5 bg-zinc-950/40 border border-white/5 rounded-xl p-2.5">
             <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 mb-1.5 px-0.5 select-none">
-              <span className={`flex items-center gap-1 ${match.probA === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold' : ''}`}>
-                {match.probA === Math.min(match.probA, match.probB, match.probDraw) && (
+              <span className={`flex items-center gap-1 ${match.probA < match.probB ? 'text-amber-400 font-extrabold' : ''}`}>
+                {match.probA < match.probB && (
                   <span className="text-[7px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1 py-0.5 rounded font-black tracking-wider uppercase">
                     Underdog
                   </span>
                 )}
                 <span>{match.teamA} {match.probA}%</span>
               </span>
-              <span className={`flex items-center gap-1 ${match.probDraw === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold' : ''}`}>
-                {match.probDraw === Math.min(match.probA, match.probB, match.probDraw) && (
-                  <span className="text-[7px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1 py-0.5 rounded font-black tracking-wider uppercase">
-                    Underdog
-                  </span>
-                )}
+              <span className="flex items-center gap-1 select-none">
                 <span>Draw {match.probDraw}%</span>
               </span>
-              <span className={`flex items-center gap-1 ${match.probB === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold' : ''}`}>
-                {match.probB === Math.min(match.probA, match.probB, match.probDraw) && (
+              <span className={`flex items-center gap-1 ${match.probB < match.probA ? 'text-amber-400 font-extrabold' : ''}`}>
+                {match.probB < match.probA && (
                   <span className="text-[7px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1 py-0.5 rounded font-black tracking-wider uppercase">
                     Underdog
                   </span>
