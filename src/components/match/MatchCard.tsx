@@ -330,17 +330,29 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
         {match.probA !== undefined && match.probB !== undefined && match.probDraw !== undefined && (
           <div className="mb-5 bg-zinc-950/40 border border-white/5 rounded-xl p-2.5">
             <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 mb-1.5 px-0.5 select-none">
-              <span className={match.probA === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold flex items-center gap-0.5' : ''}>
-                {match.probA === Math.min(match.probA, match.probB, match.probDraw) && '🔥'}
-                {match.teamA} {match.probA}%
+              <span className={`flex items-center gap-1 ${match.probA === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold' : ''}`}>
+                {match.probA === Math.min(match.probA, match.probB, match.probDraw) && (
+                  <span className="text-[7px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1 py-0.5 rounded font-black tracking-wider uppercase">
+                    Underdog
+                  </span>
+                )}
+                <span>{match.teamA} {match.probA}%</span>
               </span>
-              <span className={match.probDraw === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold flex items-center gap-0.5' : ''}>
-                {match.probDraw === Math.min(match.probA, match.probB, match.probDraw) && '🔥'}
-                Draw {match.probDraw}%
+              <span className={`flex items-center gap-1 ${match.probDraw === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold' : ''}`}>
+                {match.probDraw === Math.min(match.probA, match.probB, match.probDraw) && (
+                  <span className="text-[7px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1 py-0.5 rounded font-black tracking-wider uppercase">
+                    Underdog
+                  </span>
+                )}
+                <span>Draw {match.probDraw}%</span>
               </span>
-              <span className={match.probB === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold flex items-center gap-0.5' : ''}>
-                {match.probB === Math.min(match.probA, match.probB, match.probDraw) && '🔥'}
-                {match.teamB} {match.probB}%
+              <span className={`flex items-center gap-1 ${match.probB === Math.min(match.probA, match.probB, match.probDraw) ? 'text-amber-400 font-extrabold' : ''}`}>
+                {match.probB === Math.min(match.probA, match.probB, match.probDraw) && (
+                  <span className="text-[7px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1 py-0.5 rounded font-black tracking-wider uppercase">
+                    Underdog
+                  </span>
+                )}
+                <span>{match.teamB} {match.probB}%</span>
               </span>
             </div>
             {/* Probability Progress Bar */}
@@ -358,9 +370,12 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
                 className="h-full bg-zinc-400"
               />
             </div>
-            <div className="mt-1.5 text-center">
-              <span className="text-[9px] text-amber-500/80 font-black tracking-widest uppercase">
-                🔥 Underdog Win Bonus: +20 pts
+            <div className="mt-1.5 text-center flex items-center justify-center gap-1.5">
+              <span className="text-[8px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">
+                Bonus
+              </span>
+              <span className="text-[9px] text-zinc-400 font-bold tracking-wide">
+                Underdog outcome yields +20 pts extra!
               </span>
             </div>
           </div>

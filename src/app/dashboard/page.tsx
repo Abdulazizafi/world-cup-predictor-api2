@@ -1018,11 +1018,11 @@ export default function DashboardPage() {
               <div className="my-6 space-y-4 text-left">
                 {/* 1. Underdog Win Bonus */}
                 <div className="bg-zinc-950/60 border border-white/5 rounded-2xl p-4 flex gap-3">
-                  <span className="text-xl shrink-0 mt-0.5">🔥</span>
+                  <span className="text-xs shrink-0 mt-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1.5 py-0.5 rounded font-black tracking-wider uppercase self-start">Bonus</span>
                   <div>
                     <h4 className="font-black text-sm text-white">Underdog Win Bonus (+20 pts)</h4>
                     <p className="text-xs text-zinc-400 leading-relaxed mt-1">
-                      Every match now displays team win/draw probabilities. If you correctly predict an outcome that has the **lowest probability** (marked with a <span className="text-amber-400 font-bold">🔥</span>), you get an extra **+20 points** (+40 points if using your X2 wildcard!).
+                      Every match now displays team win/draw probabilities. If you correctly predict an outcome that has the **lowest probability** (marked with a <span className="text-amber-400 font-bold border border-amber-500/30 bg-amber-500/10 px-1 py-0.5 rounded text-[8px] uppercase tracking-wider font-black mx-1">Underdog</span> badge), you get an extra **+20 points** (+40 points if using your X2 wildcard!).
                     </p>
                   </div>
                 </div>
