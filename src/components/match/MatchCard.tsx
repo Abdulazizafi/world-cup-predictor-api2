@@ -348,14 +348,18 @@ export default function MatchCard({ match, index = 0, x2Remaining }: MatchCardPr
               </span>
             </div>
             {/* Probability Progress Bar */}
-            <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden flex">
+            <div className="h-1.5 w-full bg-zinc-900/50 rounded-full overflow-hidden flex">
               <div 
                 style={{ width: `${match.probA}%` }} 
-                className="h-full bg-amber-500"
+                className={`h-full transition-all duration-300 ${
+                  match.probA < match.probB ? 'bg-amber-550 shadow-[0_0_8px_rgba(245,158,11,0.4)]' : 'bg-zinc-700/60'
+                }`}
               />
               <div 
                 style={{ width: `${match.probB}%` }} 
-                className="h-full bg-zinc-400"
+                className={`h-full transition-all duration-300 ${
+                  match.probB < match.probA ? 'bg-amber-550 shadow-[0_0_8px_rgba(245,158,11,0.4)]' : 'bg-zinc-700/60'
+                }`}
               />
             </div>
             <div className="mt-1.5 text-center flex items-center justify-center gap-1.5">
